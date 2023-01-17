@@ -1,40 +1,77 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
+	"github.com/multisig-labs/gogotools/cmd/subnetcmd"
+	"github.com/multisig-labs/gogotools/cmd/utilscmd"
+	"github.com/multisig-labs/gogotools/cmd/walletcmd"
+	"github.com/multisig-labs/gogotools/pkg/application"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "gogotools",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+var (
+	app     *application.GoGoTools
+	cfgFile string
+	verbose bool
+)
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+func NewRootCmd() *cobra.Command {
+
+	rootCmd := &cobra.Command{
+		Use:               "ggt",
+		Short:             "GoGoTools, a utility belt for Avalanche developers",
+		Long:              ``,
+		PersistentPreRunE: initApp,
+	}
+
+	rootCmd.CompletionOptions.HiddenDefaultCmd = true
+	rootCmd.SilenceUsage = true // So cobra doesn't print usage when a command fails.
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/ggt.json)")
+	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "output more verbose logs")
+	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
+	rootCmd.AddCommand(subnetcmd.NewCmd(app))
+	rootCmd.AddCommand(utilscmd.NewCmd(app))
+	rootCmd.AddCommand(walletcmd.NewCmd(app))
+	rootCmd.AddCommand(versionCmd)
+	return rootCmd
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
-		os.Exit(1)
+// initConfig reads in config file and ENV variables if set.
+func initConfig() {
+	if cfgFile != "" {
+		// Use config file from the flag.
+		viper.SetConfigFile(cfgFile)
+	} else {
+		// Search for default config.
+		home, err := os.UserHomeDir()
+		cobra.CheckErr(err)
+		viper.AddConfigPath(fmt.Sprintf("%s/.config", home))
+		viper.SetConfigType("json")
+		viper.SetConfigName("ggt")
+	}
+
+	viper.AutomaticEnv() // read in environment variables that match
+
+	// If a config file is found, read it in.
+	if err := viper.ReadInConfig(); err == nil {
+		app.Log.Infof("Using config file %s", viper.ConfigFileUsed())
 	}
 }
 
-func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+func initApp(_ *cobra.Command, _ []string) error {
+	initConfig()
+	if viper.GetBool("verbose") {
+		app.Verbose()
+	}
+	return nil
+}
 
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gogotools.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+func Execute() {
+	app = application.New()
+	rootCmd := NewRootCmd()
+	err := rootCmd.Execute()
+	cobra.CheckErr(err)
 }

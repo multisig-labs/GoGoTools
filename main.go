@@ -2,15 +2,15 @@ package main
 
 import (
 	"fmt"
-	"gogotools/cmd"
-	"gogotools/pkg/version"
 	"os"
 	"runtime/debug"
+
+	"github.com/multisig-labs/gogotools/cmd"
+	"github.com/multisig-labs/gogotools/pkg/version"
 )
 
 func main() {
 	defer panicHandler()
-
 	cmd.Execute()
 }
 
