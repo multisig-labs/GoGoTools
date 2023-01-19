@@ -1,0 +1,11 @@
+{
+  "network-id": "local",
+  "staking-enabled": false,
+  "staking-ephemeral-cert-enabled": true,
+  "staking-ephemeral-signer-enabled": true,
+  "index-enabled": true,
+  "api-keystore-enabled": true,
+  "api-admin-enabled": true,
+  "log-rotater-max-files": 1,
+  "log-rotater-max-size": 1
+}

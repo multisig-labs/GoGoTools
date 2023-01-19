@@ -2,8 +2,8 @@ package walletcmd
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
+	"os"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/crypto"
@@ -15,30 +15,37 @@ import (
 
 func newCreateChainCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-chain [subnetID] [name] [vm] [genesis]",
-		Short: "Issue a CreateBlockchain tx and return the txID",
+		Use:   "create-chain name vm genesisFile [subnetID]",
+		Short: "Issue a CreateBlockchain tx and return the txID. Also creates a Subnet if necessary.",
 		Long:  ``,
-		Args:  cobra.ExactArgs(4),
+		Args:  cobra.MinimumNArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key, err := decodePrivateKey(viper.GetString("pk"))
 			cobra.CheckErr(err)
 
-			subnetID, err := ids.FromString(args[0])
-			cobra.CheckErr(err)
-
-			name := args[1]
+			name := args[0]
 
 			paddedBytes := [32]byte{}
-			copy(paddedBytes[:], []byte(args[2]))
+			copy(paddedBytes[:], []byte(args[1]))
 			vmID, err := ids.ToID(paddedBytes[:])
 			cobra.CheckErr(err)
 
-			genesisBytes, err := hex.DecodeString(args[3])
+			genesisBytes, err := os.ReadFile(args[2])
 			cobra.CheckErr(err)
+
+			var subnetID ids.ID
+			if len(args) < 4 || args[3] == "" {
+				app.Log.Debug("No SubnetID supplied, creating a new Subnet")
+				subnetID, err = createSubnet(key)
+				cobra.CheckErr(err)
+			} else {
+				subnetID, err = ids.FromString(args[3])
+				cobra.CheckErr(err)
+			}
 
 			txID, err := createChain(key, subnetID, name, vmID, genesisBytes)
 			cobra.CheckErr(err)
-			fmt.Println(txID)
+			fmt.Printf("%s/ext/bc/%s/rpc\n", primary.LocalAPIURI, txID)
 			return nil
 		},
 	}
@@ -46,7 +53,7 @@ func newCreateChainCmd() *cobra.Command {
 }
 
 func createChain(key *crypto.PrivateKeySECP256K1R, subnetID ids.ID, name string, vmID ids.ID, genesisBytes []byte) (ids.ID, error) {
-	uri := primary.LocalAPIURI
+	uri := viper.GetString("node-url")
 	kc := secp256k1fx.NewKeychain(key)
 	ctx := context.Background()
 
@@ -66,6 +73,6 @@ func createChain(key *crypto.PrivateKeySECP256K1R, subnetID ids.ID, name string,
 		return ids.Empty, fmt.Errorf("failed to issue CreateBlockchainTx: %w", err)
 	}
 
-	app.Log.Info("created new blockchain", createChainTxID)
+	app.Log.Info("created new blockchain ", createChainTxID)
 	return createChainTxID, nil
 }

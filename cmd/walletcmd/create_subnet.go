@@ -31,7 +31,7 @@ func newCreateSubnetCmd() *cobra.Command {
 }
 
 func createSubnet(key *crypto.PrivateKeySECP256K1R) (ids.ID, error) {
-	uri := primary.LocalAPIURI
+	uri := viper.GetString("node-url")
 	kc := secp256k1fx.NewKeychain(key)
 	subnetOwner := key.Address()
 	ctx := context.Background()
@@ -53,6 +53,5 @@ func createSubnet(key *crypto.PrivateKeySECP256K1R) (ids.ID, error) {
 		return ids.Empty, fmt.Errorf("failed to issue CreateSubnetTx: %w", err)
 	}
 
-	app.Log.Info("created new subnet", createSubnetTxID)
 	return createSubnetTxID, nil
 }

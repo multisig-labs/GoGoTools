@@ -1,5 +1,6 @@
 package constants
 
 const (
-	FOO = 1
+	FOO             = 1
+	DefaultPerms755 = 0o755
 )

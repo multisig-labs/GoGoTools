@@ -10,7 +10,7 @@ type GoGoTools struct {
 
 func New() *GoGoTools {
 	cfg := zap.NewDevelopmentConfig()
-	cfg.Level.SetLevel(zap.WarnLevel)
+	cfg.Level.SetLevel(zap.InfoLevel)
 	logger := zap.Must(cfg.Build())
 	return &GoGoTools{Log: logger.Sugar()}
 }
