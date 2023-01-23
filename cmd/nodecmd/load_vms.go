@@ -22,7 +22,6 @@ func newLoadVMsCmd() *cobra.Command {
 }
 
 func loadVMs() error {
-	// TODO uri in env
 	uri := viper.GetString("node-url")
 	urlAdmin := fmt.Sprintf("%s/ext/admin", uri)
 

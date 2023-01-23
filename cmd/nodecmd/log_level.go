@@ -10,7 +10,7 @@ import (
 
 func newLogLevelCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "log-level [level] [name]",
+		Use:   "log-level level [name]",
 		Short: "Set the log level for a running node",
 		Long:  `Set the log level for a running node (DEBUG, INFO, ERROR) and optionally for a specific chain (X, P, C)`,
 		Args:  cobra.MinimumNArgs(1),
@@ -26,7 +26,6 @@ func newLogLevelCmd() *cobra.Command {
 }
 
 func setLoggerLevel(level string, name string) error {
-	// TODO uri in env
 	uri := viper.GetString("node-url")
 
 	ctx := context.Background()

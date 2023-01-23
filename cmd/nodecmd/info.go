@@ -25,7 +25,6 @@ func newInfoCmd() *cobra.Command {
 
 // It's not you, Types, it's me. I think we need a break for a bit.
 func getInfo() error {
-	// TODO uri in env
 	uri := viper.GetString("node-url")
 	urlInfo := fmt.Sprintf("%s/ext/info", uri)
 	urlP := fmt.Sprintf("%s/ext/bc/P", uri)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -76,6 +77,16 @@ func FetchRPCGJSON(url string, method string, params string) (*gjson.Result, err
 	}
 	out := gjson.Parse(s)
 	return &out, nil
+}
+
+func EnsureFileExists(path string) bool {
+	match, err := filepath.Glob(path)
+	if err == nil && match != nil {
+		return true
+	}
+	fmt.Fprintf(os.Stderr, "File does not exist: %s\n", path)
+	os.Exit(1)
+	return false
 }
 
 func LinkFile(src, dest string) error {

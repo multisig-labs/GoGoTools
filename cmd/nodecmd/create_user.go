@@ -11,7 +11,7 @@ import (
 
 func newCreateUserCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-user [username] [password] [pk]",
+		Use:   "create-user username password pk",
 		Short: "Create a user in the node's keystore and import pk",
 		Long:  ``,
 		Args:  cobra.ExactArgs(3),
@@ -22,10 +22,9 @@ func newCreateUserCmd() *cobra.Command {
 	return cmd
 }
 
-// TODO pk? Is that useful?
+// TODO import pk? Is that useful?
 
 func createUser(username string, password string, pk string) error {
-	// TODO uri in env
 	uri := viper.GetString("node-url")
 
 	ctx := context.Background()

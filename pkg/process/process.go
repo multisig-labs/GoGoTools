@@ -1,6 +1,7 @@
 package process
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"syscall"
@@ -25,6 +26,7 @@ func (p *process) Running() bool {
 }
 
 func (p *process) Start() error {
+	fmt.Println(p.Cmd.String())
 	return p.Cmd.Start()
 }
 

@@ -16,7 +16,7 @@ import (
 func newCreateChainCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-chain name vm genesisFile [subnetID]",
-		Short: "Issue a CreateBlockchain tx and return the txID. Also creates a Subnet if necessary.",
+		Short: "Issue a CreateBlockchain tx and return the txID. Also creates a new Subnet if subnetID is not specified.",
 		Long:  ``,
 		Args:  cobra.MinimumNArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -74,5 +74,6 @@ func createChain(key *crypto.PrivateKeySECP256K1R, subnetID ids.ID, name string,
 	}
 
 	app.Log.Info("created new blockchain ", createChainTxID)
+	app.Log.Info("NOTE: Check the data/logs/main.log file, as the blockchain may not start if anything is wrong with the VM binary or paths")
 	return createChainTxID, nil
 }

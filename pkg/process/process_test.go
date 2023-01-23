@@ -7,7 +7,6 @@ import (
 )
 
 func TestFoo(t *testing.T) {
-	// p := NewProcess("/Users/john/Code/GoGoPool/template-subnetevm/node/bin/avalanchego", "/Users/john/Code/GoGoPool/template-subnetevm/node/bin")
 	done := make(chan error)
 	p := NewProcess("sleep", []string{"4"}, "")
 	go func() {

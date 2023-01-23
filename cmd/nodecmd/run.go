@@ -9,19 +9,23 @@ import (
 
 	"github.com/multisig-labs/gogotools/pkg/process"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func newRunCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "run [work-dir]",
-		Short: "",
+		Use:   "run work-dir",
+		Short: "Run avalanchego from a previously prepared directory",
 		Long:  ``,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			viper.BindPFlags(cmd.Flags())
 			c, a := nodeCmd(args[0])
 			return runNodeAndWait(c, a)
 		},
 	}
+	cmd.Flags().String("port", "9650", "Port that the node will listen on for API commands")
+
 	return cmd
 }
 
@@ -34,7 +38,13 @@ func nodeCmd(workDir string) (string, []string) {
 	nodeConfig := filepath.Join(workDir, "configs", "node-config.json")
 	pluginsPath := filepath.Join(workDir, "bin", "plugins")
 
+	// TODO Not sure why we have to also specify --chain-config-dir etc, it should just be by default a child of --data-dir ?
 	args := []string{
+		"--http-host=0.0.0.0", // allow connections from anywhere
+		fmt.Sprintf("--http-port=%s", viper.GetString("port")),
+		"--public-ip=127.0.0.1", // this disables NAT
+		"--bootstrap-ids=",      // dont try to connect to anyone else
+		"--bootstrap-ips=",
 		fmt.Sprintf("--data-dir=%s", dataPath),
 		fmt.Sprintf("--config-file=%s", nodeConfig),
 		fmt.Sprintf("--chain-config-dir=%s", configsPath),
@@ -45,7 +55,7 @@ func nodeCmd(workDir string) (string, []string) {
 	return avaBin, args
 }
 
-// TODO make an escaped cmd to print out for copy paste
+// TODO make a properly shell-escaped cmd to print out if user wants to copy paste it somewhere
 // func displayCmd(cmd string args []string) string {
 // }
 
@@ -57,10 +67,11 @@ func runNodeAndWait(cmd string, args []string) error {
 	go func() {
 		err := p.Start()
 		if err != nil {
+			app.Log.Fatalf("%v", err)
 			done <- err
 			return
 		}
-		fmt.Printf("Avalanche node started with PID: %d\n", p.Process.Pid)
+		fmt.Printf("Avalanche node listening on http://0.0.0.0:%s [PID: %d]\n", viper.GetString("port"), p.Process.Pid)
 		done <- p.Wait()
 	}()
 

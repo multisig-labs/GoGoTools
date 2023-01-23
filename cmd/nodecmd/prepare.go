@@ -16,8 +16,8 @@ import (
 
 func newPrepareCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "prepare [work-dir]",
-		Short: "",
+		Use:   "prepare work-dir",
+		Short: "Create a new self-contained directory for a node",
 		Long:  ``,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -25,17 +25,26 @@ func newPrepareCmd() *cobra.Command {
 			if viper.GetString("ava-bin") == "" {
 				return fmt.Errorf("must supply --ava-bin flag or AVA_BIN env")
 			}
+			utils.EnsureFileExists(viper.GetString("ava-bin"))
+
+			if viper.GetString("vm-bin") == "" {
+				app.Log.Warnln("WARNING: --vm-bin or VM_BIN not supplied, creating avalanchego node without any subnet vms")
+			} else {
+				utils.EnsureFileExists(viper.GetString("ava-bin"))
+			}
+
 			if err := prepareWorkDir(args[0], viper.GetString("ava-bin"), viper.GetString("vm-bin"), viper.GetString("vm-name")); err != nil {
 				return err
 			}
+
 			fmt.Printf("Success! run 'ggt node run %s' to start the node", args[0])
 			return nil
 		},
 	}
-	cmd.Flags().String("ava-bin", "", "Location of avalanchego binary")
-	cmd.Flags().String("vm-bin", "", "Location of subnetevm binary")
-	cmd.Flags().String("vm-name", "subnetevm", "Name of vm")
-	cmd.Flags().String("node-config", "", "Location of node config file")
+	cmd.Flags().String("ava-bin", "", "Location of avalanchego binary (also AVA_BIN)")
+	cmd.Flags().String("vm-bin", "", "(optional) Location of subnetevm binary (also VM_BIN)")
+	cmd.Flags().String("vm-name", "subnetevm", "(optional) Name of vm (also VM_NAME)")
+	cmd.Flags().String("node-config", "", "(optional) Location of node config file, also (NODE_CONFIG)")
 	return cmd
 }
 
@@ -70,7 +79,10 @@ func prepareWorkDir(workDir string, avaBin string, vmBin string, vmName string) 
 	fn = filepath.Join(configsChainsPath, "aliases.json")
 	ioutil.WriteFile(fn, []byte("{}"), 0644)
 
+	// Always write a vm aliases file even if empty to make avalanchego happy
+	vmAliases := "{}"
 	if vmBin != "" {
+		// TODO make this a fn
 		paddedBytes := [32]byte{}
 		copy(paddedBytes[:], []byte(vmName))
 		vmID, err := ids.ToID(paddedBytes[:])
@@ -83,10 +95,10 @@ func prepareWorkDir(workDir string, avaBin string, vmBin string, vmName string) 
 			return fmt.Errorf("failed linking file '%s' to '%s': %w", vmBin, fn, err)
 		}
 
-		vmAliases, _ := sjson.Set("{}", vmID.String(), []string{vmName})
-		fn = filepath.Join(configsVmsPath, "aliases.json")
-		ioutil.WriteFile(fn, []byte(vmAliases), 0644)
+		vmAliases, _ = sjson.Set("{}", vmID.String(), []string{vmName})
 	}
+	fn = filepath.Join(configsVmsPath, "aliases.json")
+	ioutil.WriteFile(fn, []byte(vmAliases), 0644)
 
 	return nil
 }
