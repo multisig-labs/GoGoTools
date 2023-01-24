@@ -37,8 +37,9 @@ We are still trying to find the optimal workflows for doing this kind of dev wor
 
 **Assumptions:**
 
-- You have a version of the `avalanchego` binary you want to use
-- You have cloned the subnet-evm repo and have a compiled evm binary
+- You have [Foundry](https://book.getfoundry.sh/getting-started/installation) installed and `cast` in your path
+- You have a version of the `avalanchego` binary
+- You have cloned the [subnet-evm](https://github.com/ava-labs/subnet-evm) repo and have a compiled evm binary
 - You have this tool `ggt` compiled and in your $PATH
 
 ### Workflow
@@ -46,7 +47,7 @@ We are still trying to find the optimal workflows for doing this kind of dev wor
 ```sh
 mkdir MySubnet
 cd MySubnet
-
+ggt utils init
 ggt node prepare nodeV1 --ava-bin=/full/path/to/avalanchego --vm-name=subnetevm --vm-bin=/full/path/to/subnetevm
 ```
 
@@ -60,6 +61,8 @@ nodeV1
 │       └── srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy -> /full/path/to/subnetevm
 ├── configs
 │   ├── chains
+│   │   ├── C
+│   │   │   └── config.json
 │   │   └── aliases.json
 │   ├── node-config.json
 │   └── vms
@@ -93,13 +96,13 @@ ggt node run nodeV1
 
 This will start `avalanchego` from the `nodeV1` directory and you should see the `nodeV1/data` directory fill up with logs and data.
 
-In another terminal, lets create our subnet:
+In another terminal, lets create our subnet (the `ggt utils init` cmd creates a sample genesis with all precompiles enabled):
 
 ```sh
-ggt wallet create-chain MyChain subnetevm /path/to/genesis-subnetevm.json
+ggt wallet create-chain MyChain subnetevm genesis.json
 ```
 
-This will create a Subnet, and then inside that new subnet it will create a blockchain with the name `MyChain`, using the `subnetevm` virtual machine we registered earlier, and use the specified genesis file.
+This will create a Subnet, and then inside that new subnet it will create a blockchain with the name `MyChain`, using the `subnetevm` virtual machine we registered earlier, and using the specified genesis file.
 
 You should see an RPC URL printed to the terminal:
 
@@ -210,6 +213,64 @@ This makes it easy to do something like this:
 export ETH_RPC_URL=`ggt node info | jq -r '.rpcs.MyChain'`
 cast call 0x0000000000000000000000000000000000000000 `cast sig "getCurrentBlockNumber()"`
 ```
+
+## Subnet EVM Precompiles
+
+The [Subnet-EVM](https://github.com/ava-labs/subnet-evm) repo has some nice example contracts you can use to interact with the default precompiles.
+
+However, in the interest of getting as close to the metal as possible, to really understand how things are working, `ggt` has some convenience commands that wrap the (amazing!) `cast` command from Foundry. The `ggt utils init` command creates default `accounts.json` and `contracts.json` files, that you can modify with your particular info, and we use these to make issuing `cast` commands a little more ergonomic by using those files to resolve user and contract addresses.
+
+Assuming you have your node running, and your `ETH_RPC_URL` pointing to it, you can do things like this:
+
+```sh
+# Balances of users in accounts.json
+ggt cast balances | jq
+# Send eth from one user to another
+ggt cast send-eth owner alice 1ether | jq
+# Call read-only contract methods
+ggt cast call owner TxAllowList "readAllowList(address)" bob
+ggt cast call owner FeeConfigManager "getFeeConfigLastChangedAt()"
+# Send a signed tx to a contract / method
+ggt cast send owner NativeMinter "mintNativeCoin(address,uint256)" alice 1ether | jq
+ggt cast send owner TxAllowList "setEnabled(address)" bob | jq
+ggt cast send owner TxAllowList "setNone(address)" bob | jq
+```
+
+Cast has tools to decode the output of a contract call, so for example to see the current fee configuration via the precompile we can do this:
+
+```sh
+export DATA=$(ggt cast call owner FeeConfigManager "getFeeConfig()")
+cast --abi-decode "getFeeConfig()(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)" $DATA
+
+8000000
+2
+25000000000
+50000000
+36
+0
+1000000
+200000
+```
+
+Which maps to the struct returned by the precompile
+
+```sol
+function getFeeConfig()
+    external
+    view
+    returns (
+      uint256 gasLimit,
+      uint256 targetBlockRate,
+      uint256 minBaseFee,
+      uint256 targetGas,
+      uint256 baseFeeChangeDenominator,
+      uint256 minBlockGasCost,
+      uint256 maxBlockGasCost,
+      uint256 blockGasCostStep
+    );
+```
+
+<hr />
 
 # 🚀 LFGG 🚀
 

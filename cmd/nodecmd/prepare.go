@@ -59,8 +59,9 @@ func prepareWorkDir(workDir string, avaBin string, vmBin string, vmName string) 
 	configsPath := filepath.Join(workDir, "configs")
 	configsVmsPath := filepath.Join(workDir, "configs", "vms")
 	configsChainsPath := filepath.Join(workDir, "configs", "chains")
+	configsChainsCPath := filepath.Join(workDir, "configs", "chains", "C")
 
-	dirList := []string{binPath, pluginsPath, dataPath, configsPath, configsVmsPath, configsChainsPath}
+	dirList := []string{binPath, pluginsPath, dataPath, configsPath, configsVmsPath, configsChainsPath, configsChainsCPath}
 	for i := 0; i < len(dirList); i++ {
 		err := os.MkdirAll(dirList[i], os.ModePerm)
 		if err != nil {
@@ -75,6 +76,9 @@ func prepareWorkDir(workDir string, avaBin string, vmBin string, vmName string) 
 
 	fn = filepath.Join(configsPath, "node-config.json")
 	ioutil.WriteFile(fn, []byte(configs.NodeConfig), 0644)
+
+	fn = filepath.Join(configsChainsCPath, "config.json")
+	ioutil.WriteFile(fn, []byte(configs.CorethConfig), 0644)
 
 	fn = filepath.Join(configsChainsPath, "aliases.json")
 	ioutil.WriteFile(fn, []byte("{}"), 0644)

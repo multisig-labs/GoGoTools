@@ -24,6 +24,7 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 		},
 	}
 
+	cmd.AddCommand(newInitCmd())
 	cmd.AddCommand(newMsgDigestCmd())
 	cmd.AddCommand(newChainIDCmd())
 

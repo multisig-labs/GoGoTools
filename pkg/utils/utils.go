@@ -1,14 +1,19 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
+	"math/big"
 	"os"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/multisig-labs/gogotools/pkg/constants"
+	"github.com/shopspring/decimal"
 	"github.com/tidwall/gjson"
 )
 
@@ -119,6 +124,109 @@ func CopyFile(src, dest string) error {
 		return err
 	}
 	return nil
+}
+
+func FileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if errors.Is(err, fs.ErrNotExist) {
+		return false
+	}
+	return !info.IsDir()
+}
+
+// Create and write a new file
+func WriteFileBytes(name string, data []byte) error {
+	f, err := os.Create(filepath.Clean(name))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	if err := f.Chmod(0600); err != nil {
+		return err
+	}
+	if _, err := f.Write(data); err != nil {
+		return err
+	}
+
+	return f.Sync()
+}
+
+func LoadJSON(path string) (*gjson.Result, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	if !gjson.Valid(string(b)) {
+		return nil, fmt.Errorf("invalid JSON reading %s", path)
+	}
+	out := gjson.Parse(string(b))
+	return &out, nil
+}
+
+// From https://goethereumbook.org/util-go/
+// Convert from gwei to ether
+func ToDecimal(ivalue interface{}, decimals int) decimal.Decimal {
+	value := new(big.Int)
+	switch v := ivalue.(type) {
+	case string:
+		value.SetString(v, 0)
+	case *big.Int:
+		value = v
+	}
+
+	mul := decimal.NewFromFloat(float64(10)).Pow(decimal.NewFromFloat(float64(decimals)))
+	num, _ := decimal.NewFromString(value.String())
+	result := num.Div(mul)
+
+	return result
+}
+
+// Given a args array, look for "0.3ether" and convert to wei
+func ResolveAmounts(args []string) []string {
+	re := regexp.MustCompile("([0-9.]+)ether$")
+	wad := big.NewFloat(1e18)
+
+	out := []string{}
+	for _, arg := range args {
+		matches := re.FindStringSubmatch(arg)
+		if len(matches) == 2 {
+			amt_f := new(big.Float)
+			amt_f.SetString(matches[1])
+			amt_fwad := amt_f.Mul(amt_f, wad)
+			amt_iwad, _ := amt_fwad.Int(nil)
+			out = append(out, amt_iwad.String())
+		} else {
+			out = append(out, arg)
+		}
+	}
+	return out
+}
+
+func ResolveContractAddrs(contracts *gjson.Result, args []string) []string {
+	out := []string{}
+	for _, arg := range args {
+		addr := contracts.Get(arg).String()
+		if addr != "" {
+			out = append(out, addr)
+		} else {
+			out = append(out, arg)
+		}
+	}
+	return out
+}
+
+func ResolveAccountAddrs(accounts *gjson.Result, args []string) []string {
+	out := []string{}
+	for _, arg := range args {
+		addr := accounts.Get(arg).Get("addr").String()
+		if addr != "" {
+			out = append(out, addr)
+		} else {
+			out = append(out, arg)
+		}
+	}
+	return out
 }
 
 // func AvaKeyToEthKey(key *crypto.PrivateKeySECP256K1R) common.Address {

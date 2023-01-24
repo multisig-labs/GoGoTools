@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/multisig-labs/gogotools/cmd/castcmd"
 	"github.com/multisig-labs/gogotools/cmd/nodecmd"
 	"github.com/multisig-labs/gogotools/cmd/subnetcmd"
 	"github.com/multisig-labs/gogotools/cmd/utilscmd"
@@ -36,6 +37,8 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.PersistentFlags().String("node-url", "http://localhost:9650", "Avalanche node URL")
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
 	viper.BindPFlag("node-url", rootCmd.PersistentFlags().Lookup("node-url"))
+
+	rootCmd.AddCommand(castcmd.NewCmd(app))
 	rootCmd.AddCommand(nodecmd.NewCmd(app))
 	rootCmd.AddCommand(subnetcmd.NewCmd(app))
 	rootCmd.AddCommand(utilscmd.NewCmd(app))
