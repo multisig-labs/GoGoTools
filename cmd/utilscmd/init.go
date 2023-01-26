@@ -13,7 +13,7 @@ func newInitCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Create default config files in the current dir",
-		Long:  `iklkjh`,
+		Long:  `Create default config files in the current dir`,
 		Run: func(cmd *cobra.Command, args []string) {
 			files := make(map[string]string)
 			files["accounts.json"] = configs.Accounts

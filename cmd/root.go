@@ -38,7 +38,7 @@ To get started, run these commands in an empty directory:
   $ ggt node run MyNodeV1
   
   # Now in another terminal
-  $ ggt wallet create-chain MyChain subnetevm genesis.json
+  $ ggt wallet create-chain MyNodeV1 MyChain subnetevm genesis.json
   $ ggt node info
 
   # Set your ethereum rpc to your new subnet/blockchain

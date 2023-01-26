@@ -33,7 +33,7 @@ func newMsgDigestCmd() *cobra.Command {
 		Use:   "msgdigest [msg]",
 		Short: "Generate a hash digest of a message",
 		Long: `Construct an Avalanche Signed Message and return the hash, that can then
-		be signed and verified in the Avalanche web wallet.`,
+be signed and verified in the Avalanche web wallet.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			b := digestAvaMsg(args[0])

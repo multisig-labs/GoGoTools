@@ -16,7 +16,11 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cast",
 		Short: "Convenience wrapper around the `cast` command (https://book.getfoundry.sh)",
-		Long:  ``,
+		Long: `Convenience wrapper around the 'cast' command (https://book.getfoundry.sh)
+
+This command uses the default or supplied accounts.json and contracts.json files
+to make it a bit more ergonomic to issue cast commands to your node.
+		`,
 		Run: func(cmd *cobra.Command, args []string) {
 			err := cmd.Help()
 			if err != nil {

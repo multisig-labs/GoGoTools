@@ -17,7 +17,7 @@ import (
 func newPrepareCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prepare work-dir",
-		Short: "Create a new self-contained directory for a node",
+		Short: "Create a new self-contained directory in [work-dir] for a node",
 		Long:  ``,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
