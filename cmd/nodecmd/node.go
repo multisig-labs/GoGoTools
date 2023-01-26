@@ -14,7 +14,7 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "node",
-		Short: "Create and run avalanchego configured as a single node with staking disabled",
+		Short: "Create and run a single-node avalanchego",
 		Long:  ``,
 		Run: func(cmd *cobra.Command, args []string) {
 			err := cmd.Help()
@@ -25,6 +25,7 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 	}
 
 	cmd.AddCommand(newCreateUserCmd())
+	cmd.AddCommand(newHealthCmd())
 	cmd.AddCommand(newInfoCmd())
 	cmd.AddCommand(newLoadVMsCmd())
 	cmd.AddCommand(newLogLevelCmd())

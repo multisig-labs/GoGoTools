@@ -24,15 +24,41 @@ var (
 func NewRootCmd() *cobra.Command {
 
 	rootCmd := &cobra.Command{
-		Use:               "ggt",
-		Short:             "GoGoTools, a utility belt for Avalanche developers",
-		Long:              ``,
+		Use:   "ggt",
+		Short: "GoGoTools, a utility belt for Avalanche developers",
+		Long: `GoGoTools, a utility belt for Avalanche developers
+
+To get started, run these commands in an empty directory:
+
+  $ ggt utils init
+  $ ggt node prepare MyNodeV1 \
+    --ava-bin=/full/path/to/avalanchego \
+    --vm-name=subnetevm \
+    --vm-bin=/full/path/to/subnetevm
+  $ ggt node run MyNodeV1
+  
+  # Now in another terminal
+  $ ggt wallet create-chain MyChain subnetevm genesis.json
+  $ ggt node info
+
+  # Set your ethereum rpc to your new subnet/blockchain
+  $ export ETH_RPC_URL=$(ggt node info | jq -r '.rpcs.MyChain')
+
+  # Run some commands against it
+  $ cast chain-id
+  $ ggt cast balances
+  $ ggt cast send-eth owner alice 1ether
+  $ ggt cast send owner NativeMinter "mintNativeCoin(address,uint256)" alice 1ether
+
+  See the repo for more info. 
+  https://github.com/multisig-labs/GoGoTools
+  `,
 		PersistentPreRunE: initApp,
 	}
 
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 	rootCmd.SilenceUsage = true // So cobra doesn't print usage when a command fails.
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/ggt.json)")
+	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/ggt.json)")
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "output more verbose logs")
 	rootCmd.PersistentFlags().String("node-url", "http://localhost:9650", "Avalanche node URL")
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))

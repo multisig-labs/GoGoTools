@@ -15,7 +15,7 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "cast",
-		Short: "",
+		Short: "Convenience wrapper around the `cast` command",
 		Long:  ``,
 		Run: func(cmd *cobra.Command, args []string) {
 			err := cmd.Help()

@@ -63,7 +63,12 @@ func getInfo() error {
 			// Maybe Admin API is disabled on this node, skip it.
 			return false
 		}
-		aliases, _ = sjson.SetRaw(aliases, fmt.Sprintf("blockchainAliases.%s", blockchainID), blockchainAliases.Get("result.aliases").String())
+		// If subnet didnt start for some reason, this will be blank
+		s := blockchainAliases.Get("result.aliases").String()
+		if s == "" {
+			s = `["ERROR starting blockchain"]`
+		}
+		aliases, _ = sjson.SetRaw(aliases, fmt.Sprintf("blockchainAliases.%s", blockchainID), s)
 		return true
 	})
 

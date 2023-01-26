@@ -14,7 +14,7 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "subnet",
-		Short: "",
+		Short: "Coming Soon!",
 		Long:  ``,
 		Run: func(cmd *cobra.Command, args []string) {
 			err := cmd.Help()

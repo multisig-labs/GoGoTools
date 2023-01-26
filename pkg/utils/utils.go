@@ -152,6 +152,24 @@ func WriteFileBytes(name string, data []byte) error {
 	return f.Sync()
 }
 
+func WatchFile(filePath string) error {
+	initialStat, err := os.Stat(filePath)
+	if err != nil {
+		return err
+	}
+	for {
+		stat, err := os.Stat(filePath)
+		if err != nil {
+			return err
+		}
+		if stat.Size() != initialStat.Size() || stat.ModTime() != initialStat.ModTime() {
+			break
+		}
+		time.Sleep(2 * time.Second)
+	}
+	return nil
+}
+
 func LoadJSON(path string) (*gjson.Result, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
