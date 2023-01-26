@@ -113,7 +113,7 @@ func runNode(workDir string, cmd string, args []string) error {
 	fmt.Printf("Avalanche node listening on http://0.0.0.0:%s\n", viper.GetString("port"))
 	fmt.Printf("(Send USR1 to PID %d to restart the node)\n\n", os.Getpid())
 	fmt.Printf("In another terminal, run this command to create a subnetEVM\n")
-	fmt.Printf("  ggt wallet create-chain MyChainName subnetevm\n")
+	fmt.Printf("  ggt wallet create-chain MyNodeName MyChainName subnetevm\n")
 
 	// TODO this doesnt quite work yet
 	if viper.GetBool("watch") {
