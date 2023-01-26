@@ -7,6 +7,7 @@ require (
 	github.com/ava-labs/coreth v0.11.6-rc.0
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/go-resty/resty/v2 v2.7.0
+	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/radovskyb/watcher v1.0.7
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.12.0

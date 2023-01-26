@@ -16,43 +16,63 @@ func newInfoCmd() *cobra.Command {
 		Short: "Get all info for a running node in a single JSON blob",
 		Long:  ``,
 		Args:  cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return getInfo()
+		Run: func(cmd *cobra.Command, args []string) {
+			s, err := getInfo()
+			if err != nil {
+				app.Log.Fatalf("Error: %s", err)
+			}
+			fmt.Println(s)
 		},
 	}
 	return cmd
 }
 
 // It's not you, Types, it's me. I think we need a break for a bit.
-func getInfo() error {
+func getInfo() (string, error) {
 	uri := viper.GetString("node-url")
 	urlInfo := fmt.Sprintf("%s/ext/info", uri)
 	urlP := fmt.Sprintf("%s/ext/bc/P", uri)
 	urlAdmin := fmt.Sprintf("%s/ext/admin", uri)
 
 	getNetworkName, err := utils.FetchRPCGJSON(urlInfo, "info.getNetworkName", "")
-	cobra.CheckErr(err)
+	if err != nil {
+		return "", err
+	}
 
 	getNetworkID, err := utils.FetchRPCGJSON(urlInfo, "info.getNetworkID", "")
-	cobra.CheckErr(err)
+	if err != nil {
+		return "", err
+	}
 
 	getNodeID, err := utils.FetchRPCGJSON(urlInfo, "info.getNodeID", "")
-	cobra.CheckErr(err)
+	if err != nil {
+		return "", err
+	}
 
 	getNodeVersion, err := utils.FetchRPCGJSON(urlInfo, "info.getNodeVersion", "")
-	cobra.CheckErr(err)
+	if err != nil {
+		return "", err
+	}
 
 	getVMs, err := utils.FetchRPCGJSON(urlInfo, "info.getVMs", "")
-	cobra.CheckErr(err)
+	if err != nil {
+		return "", err
+	}
 
 	getUptime, err := utils.FetchRPCGJSON(urlInfo, "info.uptime", "")
-	cobra.CheckErr(err)
+	if err != nil {
+		return "", err
+	}
 
 	getBlockchains, err := utils.FetchRPCGJSON(urlP, "platform.getBlockchains", "")
-	cobra.CheckErr(err)
+	if err != nil {
+		return "", err
+	}
 
 	getSubnets, err := utils.FetchRPCGJSON(urlP, "platform.getSubnets", "")
-	cobra.CheckErr(err)
+	if err != nil {
+		return "", err
+	}
 
 	aliases := `{"blockchainAliases":"AdminAPI disabled on node"}`
 	getBlockchains.Get("result.blockchains").ForEach(func(key, value gjson.Result) bool {
@@ -95,6 +115,6 @@ func getInfo() error {
 	out, _ = sjson.SetRaw(out, "aliases", aliases)
 	out, _ = sjson.SetRaw(out, "rpcs", rpcs)
 
-	fmt.Println(gjson.Parse(out).String())
-	return nil
+	s := gjson.Parse(out).String()
+	return s, nil
 }

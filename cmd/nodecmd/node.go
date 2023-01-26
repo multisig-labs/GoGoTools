@@ -26,6 +26,7 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 
 	cmd.AddCommand(newCreateUserCmd())
 	cmd.AddCommand(newHealthCmd())
+	cmd.AddCommand(newExplorerCmd())
 	cmd.AddCommand(newInfoCmd())
 	cmd.AddCommand(newLoadVMsCmd())
 	cmd.AddCommand(newLogLevelCmd())

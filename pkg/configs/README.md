@@ -13,6 +13,7 @@ ggt wallet create-chain NodeV1 MyChain subnetevm
 
 ggt node info | jq
 ggt node health | jq
+ggt node explorer MyChain
 
 export ETH_RPC_URL=`ggt node info | jq -r '.rpcs.MyChain'`
 echo $ETH_RPC_URL
