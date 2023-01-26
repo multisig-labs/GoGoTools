@@ -1,6 +1,14 @@
 <h1 align="center">GoGoTools 🎈</h1>
 <p align="center">A (growing) collection of useful tools for Avalanche subnet developers.</p>
 
+GGT currently lets you quickly spin up a subnet environment that has subnet-evm + precompiles, allowing you to: 
+
+- Make your “Time to RPC" 10x faster
+- Easily find/tweak/experiment with configs and precompiles
+- Easily create many isolated environments to test different versions of binaries
+- ... and comes with default user accounts / keys for easy startup
+
+
 ## Installation
 
 Requires [Go](https://golang.org/doc/install) version >= 1.19
