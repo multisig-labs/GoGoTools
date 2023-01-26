@@ -1,4 +1,5 @@
 {
+  "feeRecipient": "0x0100000000000000000000000000000000000000",
   "coreth-admin-api-enabled": true,
   "local-txs-enabled": true,
   "eth-apis": [

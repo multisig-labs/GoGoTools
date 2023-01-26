@@ -25,12 +25,20 @@ func newPrepareCmd() *cobra.Command {
 			if viper.GetString("ava-bin") == "" {
 				return fmt.Errorf("must supply --ava-bin flag or AVA_BIN env")
 			}
-			utils.EnsureFileExists(viper.GetString("ava-bin"))
+			if exists := utils.FileExists(viper.GetString("ava-bin")); !exists {
+				return fmt.Errorf("ava-bin file does not exist: %s", viper.GetString("ava-bin"))
+			}
 
 			if viper.GetString("vm-bin") == "" {
 				app.Log.Warnln("WARNING: --vm-bin or VM_BIN not supplied, creating avalanchego node without any subnet vms")
 			} else {
-				utils.EnsureFileExists(viper.GetString("ava-bin"))
+				if exists := utils.FileExists(viper.GetString("vm-bin")); !exists {
+					return fmt.Errorf("vm-bin file does not exist: %s", viper.GetString("vm-bin"))
+				}
+			}
+
+			if exists := utils.FileExists(viper.GetString("node-config")); !exists {
+				return fmt.Errorf("node-config file does not exist: %s", viper.GetString("node-config"))
 			}
 
 			if err := prepareWorkDir(args[0], viper.GetString("ava-bin"), viper.GetString("vm-bin"), viper.GetString("vm-name")); err != nil {
@@ -44,7 +52,7 @@ func newPrepareCmd() *cobra.Command {
 	cmd.Flags().String("ava-bin", "", "Location of avalanchego binary (also AVA_BIN)")
 	cmd.Flags().String("vm-bin", "", "(optional) Location of subnetevm binary (also VM_BIN)")
 	cmd.Flags().String("vm-name", "subnetevm", "(optional) Name of vm (also VM_NAME)")
-	cmd.Flags().String("node-config", "", "(optional) Location of node config file, also (NODE_CONFIG)")
+	cmd.Flags().String("node-config", "node-config.json", "Location of node config file, also (NODE_CONFIG)")
 	return cmd
 }
 
@@ -53,6 +61,7 @@ func prepareWorkDir(workDir string, avaBin string, vmBin string, vmName string) 
 		return fmt.Errorf("%s exists, aborting", workDir)
 	}
 
+	// TODO clean all this up somehow (struct?)
 	binPath := filepath.Join(workDir, "bin")
 	pluginsPath := filepath.Join(workDir, "bin", "plugins")
 	dataPath := filepath.Join(workDir, "data")
@@ -78,7 +87,7 @@ func prepareWorkDir(workDir string, avaBin string, vmBin string, vmName string) 
 	ioutil.WriteFile(fn, []byte(configs.NodeConfig), 0644)
 
 	fn = filepath.Join(configsChainsCPath, "config.json")
-	ioutil.WriteFile(fn, []byte(configs.CorethConfig), 0644)
+	ioutil.WriteFile(fn, []byte(configs.SubnetEVMConfig), 0644)
 
 	fn = filepath.Join(configsChainsPath, "aliases.json")
 	ioutil.WriteFile(fn, []byte("{}"), 0644)

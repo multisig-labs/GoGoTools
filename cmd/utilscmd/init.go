@@ -12,33 +12,24 @@ func newInitCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "init",
-		Short: "Create default files in the current dir (accounts.json, contracts.json, genesis.json)",
-		Long:  ``,
+		Short: "Create default config files in the current dir",
+		Long:  `iklkjh`,
 		Run: func(cmd *cobra.Command, args []string) {
-			var fn string
+			files := make(map[string]string)
+			files["accounts.json"] = configs.Accounts
+			files["contracts.json"] = configs.Contracts
+			files["subnetevm-genesis.json"] = configs.SubnetEVMGenesis
+			files["subnetevm-config.json"] = configs.SubnetEVMConfig
+			files["node-config.json"] = configs.NodeConfig
+			files["README.md"] = configs.Readme
 
-			fn = "accounts.json"
-			if utils.FileExists(fn) {
-				fmt.Printf("File exists, skipping %s\n", fn)
-			} else {
-				fmt.Printf("Creating %s\n", fn)
-				utils.WriteFileBytes(fn, []byte(configs.Accounts))
-			}
-
-			fn = "contracts.json"
-			if utils.FileExists(fn) {
-				fmt.Printf("File exists, skipping %s\n", fn)
-			} else {
-				fmt.Printf("Creating %s\n", fn)
-				utils.WriteFileBytes(fn, []byte(configs.Contracts))
-			}
-
-			fn = "genesis.json"
-			if utils.FileExists(fn) {
-				fmt.Printf("File exists, skipping %s\n", fn)
-			} else {
-				fmt.Printf("Creating %s\n", fn)
-				utils.WriteFileBytes(fn, []byte(configs.GenesisSubnetEVM))
+			for fn, content := range files {
+				if utils.FileExists(fn) {
+					fmt.Printf("File exists, skipping %s\n", fn)
+				} else {
+					fmt.Printf("Creating %s\n", fn)
+					utils.WriteFileBytes(fn, []byte(content))
+				}
 			}
 		},
 	}

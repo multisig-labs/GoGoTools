@@ -13,8 +13,11 @@ var Contracts string
 //go:embed node-config.json
 var NodeConfig string
 
-//go:embed genesis-subnetevm.json
-var GenesisSubnetEVM string
+//go:embed subnetevm-genesis.json
+var SubnetEVMGenesis string
 
-//go:embed coreth-config.json
-var CorethConfig string
+//go:embed subnetevm-config.json
+var SubnetEVMConfig string
+
+//go:embed README.md
+var Readme string

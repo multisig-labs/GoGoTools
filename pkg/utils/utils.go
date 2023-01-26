@@ -84,16 +84,6 @@ func FetchRPCGJSON(url string, method string, params string) (*gjson.Result, err
 	return &out, nil
 }
 
-func EnsureFileExists(path string) bool {
-	match, err := filepath.Glob(path)
-	if err == nil && match != nil {
-		return true
-	}
-	fmt.Fprintf(os.Stderr, "File does not exist: %s\n", path)
-	os.Exit(1)
-	return false
-}
-
 func LinkFile(src, dest string) error {
 	return os.Symlink(src, dest)
 }
@@ -132,6 +122,14 @@ func FileExists(filename string) bool {
 		return false
 	}
 	return !info.IsDir()
+}
+
+func DirExists(dir string) bool {
+	info, err := os.Stat(dir)
+	if errors.Is(err, fs.ErrNotExist) {
+		return false
+	}
+	return info.IsDir()
 }
 
 // Create and write a new file

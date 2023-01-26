@@ -1,6 +1,7 @@
 {
   "config": {
     "chainId": 8675309,
+    "allowFeeRecipients": false,
     "feeConfig": {
       "gasLimit": 8000000,
       "targetBlockRate": 2,

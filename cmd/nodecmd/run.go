@@ -10,6 +10,7 @@ import (
 	"time"
 
 	gocmd "github.com/go-cmd/cmd"
+	"github.com/multisig-labs/gogotools/pkg/utils"
 	"github.com/radovskyb/watcher"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -35,7 +36,7 @@ func newRunCmd() *cobra.Command {
 	}
 	cmd.Flags().String("port", "9650", "Port that the node will listen on for API commands")
 	cmd.Flags().Bool("clear-logs", false, "Delete data/logs/* before starting node")
-	cmd.Flags().Bool("watch", false, "Watch data/bin and restart on any file changes")
+	cmd.Flags().Bool("watch", false, "(Experimental!) Watch data/bin and restart on any file changes")
 
 	return cmd
 }
@@ -44,8 +45,8 @@ func nodeCmd(workDir string) (string, []string) {
 	// TODO combine this config with prepare
 	avaBin := filepath.Join(workDir, "bin", "avalanchego")
 	dataPath := filepath.Join(workDir, "data")
-	// configsPath := filepath.Join(workDir, "configs")
 	chainConfigsPath := filepath.Join(workDir, "configs", "chains")
+	// subnetConfigsPath := filepath.Join(workDir, "configs", "subnets")
 	vmAliasesConfig := filepath.Join(workDir, "configs", "vms", "aliases.json")
 	chainAliasesConfig := filepath.Join(workDir, "configs", "chains", "aliases.json")
 	nodeConfig := filepath.Join(workDir, "configs", "node-config.json")
@@ -62,9 +63,11 @@ func nodeCmd(workDir string) (string, []string) {
 		fmt.Sprintf("--data-dir=%s", dataPath),
 		fmt.Sprintf("--config-file=%s", nodeConfig),
 		fmt.Sprintf("--chain-config-dir=%s", chainConfigsPath),
+		// fmt.Sprintf("--subnet-config-dir=%s", subnetConfigsPath),
 		fmt.Sprintf("--plugin-dir=%s", pluginsPath),
 		fmt.Sprintf("--vm-aliases-file=%s", vmAliasesConfig),
 		fmt.Sprintf("--chain-aliases-file=%s", chainAliasesConfig),
+		// fmt.Sprintf("--track-subnets=p4jUwqZsA2LuSftroCd3zb4ytH8W99oXKuKVZdsty7eQ3rXD6"),
 	}
 	return avaBin, args
 }
@@ -108,7 +111,9 @@ func runNode(workDir string, cmd string, args []string) error {
 	doneChan := envCmd.Done()
 
 	fmt.Printf("Avalanche node listening on http://0.0.0.0:%s\n", viper.GetString("port"))
-	fmt.Printf("(Send USR1 to PID %d to restart the node)\n", os.Getpid())
+	fmt.Printf("(Send USR1 to PID %d to restart the node)\n\n", os.Getpid())
+	fmt.Printf("In another terminal, run this command to create a subnetEVM\n")
+	fmt.Printf("  ggt wallet create-chain MyChainName subnetevm\n")
 
 	// TODO this doesnt quite work yet
 	if viper.GetBool("watch") {
@@ -144,6 +149,9 @@ func runNode(workDir string, cmd string, args []string) error {
 		// 	fmt.Printf("%s: %s\n", path, f.Name())
 		// }
 	}
+
+	// Write a .pid so other commands can restart us with a USR1 if necessary
+	utils.WriteFileBytes(".pid", []byte(fmt.Sprintf("%d", os.Getpid())))
 
 	for {
 		select {

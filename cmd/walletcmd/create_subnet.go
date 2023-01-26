@@ -8,17 +8,21 @@ import (
 	"github.com/ava-labs/avalanchego/utils/crypto"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/ava-labs/avalanchego/wallet/subnet/primary"
+	"github.com/multisig-labs/gogotools/pkg/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 func newCreateSubnetCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-subnet",
+		Use:   "create-subnet work-dir",
 		Short: "Issue a CreateSubnet tx and return the txID (which is the subnetID)",
 		Long:  ``,
-		Args:  cobra.ExactArgs(0),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if exists := utils.DirExists(args[0]); !exists {
+				return fmt.Errorf("node directory does not exist: %s", args[0])
+			}
 			key, err := decodePrivateKey(viper.GetString("pk"))
 			cobra.CheckErr(err)
 			txID, err := createSubnet(key)
