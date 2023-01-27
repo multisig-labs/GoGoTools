@@ -53,7 +53,7 @@ We are still trying to find the optimal workflows for doing this kind of dev wor
 
 The idea is that we make a new, empty project directory, then use `ggt prepare` to create one or many `nodes`, which are basically a directory with `avalancego`, a vm binary, and a bunch of configs all setup in the right place.
 
-You can easily blow away a node and start over with `rf -rf <dirname>`. If you want to save off your progress just `cp` the dir to a new name.
+You can easily blow away a node and start over with `rm -rf <dirname>`. If you want to save off your progress just `cp` the dir to a new name.
 
 Once you have your node directory prepared, you can run it with `ggt node run <dirname>`. This will start up avalanchego in that directory. By default, `avalanchego` puts its files in `$HOME/.avalanchego`. **WE CHANGE THIS** behavior via command line flags to instead put all logs, db files, configs etc into the specified node directory. In this way its easy to have many directories, with say different binary versions of `avalanchego` and your vms, and switch between them. A caveat is that we expect only **ONE** node to be running at any one time.
 
