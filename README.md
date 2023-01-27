@@ -1,13 +1,12 @@
 <h1 align="center">GoGoTools 🎈</h1>
 <p align="center">A (growing) collection of useful tools for Avalanche subnet developers.</p>
 
-GGT currently lets you quickly spin up a subnet environment that has subnet-evm + precompiles, allowing you to: 
+GGT currently lets you quickly spin up a subnet environment that has avalanchego + subnet-evm + precompiles, allowing you to:
 
 - Make your “Time to RPC" 10x faster
 - Easily find/tweak/experiment with configs and precompiles
 - Easily create many isolated environments to test different versions of binaries
 - ... and comes with default user accounts / keys for easy startup
-
 
 ## Installation
 
@@ -37,7 +36,7 @@ Then build with
 just build
 ```
 
-which will create the binary `bin/ggt`
+which will create the binary `bin/ggt` (Make sure you add it to your $PATH)
 
 ## Usage
 
@@ -52,35 +51,63 @@ We are still trying to find the optimal workflows for doing this kind of dev wor
 
 ### Workflow
 
+The idea is that we make a new, empty project directory, then use `ggt prepare` to create one or many `nodes`, which are basically a directory with `avalancego`, a vm binary, and a bunch of configs all setup in the right place.
+
+You can easily blow away a node and start over with `rf -rf <dirname>`. If you want to save off your progress just `cp` the dir to a new name.
+
+Once you have your node directory prepared, you can run it with `ggt node run <dirname>`. This will start up avalanchego in that directory. By default, `avalanchego` puts its files in `$HOME/.avalanchego`. **WE CHANGE THIS** behavior via command line flags to instead put all logs, db files, configs etc into the specified node directory. In this way its easy to have many directories, with say different binary versions of `avalanchego` and your vms, and switch between them. A caveat is that we expect only **ONE** node to be running at any one time.
+
 ```sh
-mkdir MySubnet
-cd MySubnet
+mkdir MySubnetProject
+cd MySubnetProject
 ggt utils init
-ggt node prepare nodeV1 --ava-bin=/full/path/to/avalanchego --vm-name=subnetevm --vm-bin=/full/path/to/subnetevm
+ggt node prepare NodeV1 --ava-bin=/full/path/to/avalanchego --vm-name=subnetevm --vm-bin=/full/path/to/subnetevm
 ```
 
-At this point you will have a directory called `nodeV1` which looks like this:
+If you then `prepared` another node NodeV2 with some different binary versions, you might have a directory structure that looks like this:
 
 ```
-nodeV1
-├── bin
-│   ├── avalanchego -> /full/path/to/avalanchego
-│   └── plugins
-│       └── srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy -> /full/path/to/subnetevm
-├── configs
-│   ├── chains
-│   │   ├── C
-│   │   │   └── config.json
-│   │   └── aliases.json
-│   ├── node-config.json
-│   └── vms
-│       └── aliases.json
-└── data
+MySubnetProject
+├── NodeV1
+│   ├── bin
+│   │   ├── avalanchego -> /path/to/avalanchego-v1.9.6
+│   │   └── plugins
+│   │       └── srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy -> /path/to/subnetevm-v0.4.7
+│   ├── configs
+│   │   ├── chains
+│   │   │   ├── C
+│   │   │   │   └── config.json
+│   │   │   └── aliases.json
+│   │   ├── node-config.json
+│   │   └── vms
+│   │       └── aliases.json
+│   └── data
+├── NodeV2
+│   ├── bin
+│   │   ├── avalanchego -> /path/to/avalanchego-v1.9.7
+│   │   └── plugins
+│   │       └── srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy -> /path/to/subnetevm-v0.4.8
+│   ├── configs
+│   │   ├── chains
+│   │   │   ├── C
+│   │   │   │   └── config.json
+│   │   │   └── aliases.json
+│   │   ├── node-config.json
+│   │   └── vms
+│   │       └── aliases.json
+│   └── data
+├── README.md
+├── accounts.json
+├── contracts.json
+├── evmconfig.json
+├── node-config.json
+├── subnetevm-config.json
+└── subnetevm-genesis.json
 ```
 
-(Note that the `--vm-name=subnetevm` name you supplied for your VM (which can be any name) has been converted into an Avalanche `ids.ID` `srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy` and symlinked to your evm binary)
+(Note that the `--vm-name=subnetevm` name you supplied for your VM (which can be any name) has been converted into an Avalanche `ids.ID` `srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy` and symlinked to the vm binary you specified)
 
-The default `node-config.json` configures `avalanchego` to be a single node with no staking.
+The default `node-config.json` configures `avalanchego` to be a single node with no staking. In this mode, among other things, it will not try to bootstrap or connect to any other nodes, and will validate any subnet without having to specify it via the `--track-subnets` flag.
 
 ```json
 {
@@ -99,24 +126,24 @@ The default `node-config.json` configures `avalanchego` to be a single node with
 Now we can start our node:
 
 ```sh
-ggt node run nodeV1
+ggt node run NodeV1 (--clear-logs to delete data/logs before starting node)
 ```
 
-This will start `avalanchego` from the `nodeV1` directory and you should see the `nodeV1/data` directory fill up with logs and data.
+This will start `avalanchego` from the `NodeV1` directory and you should see the `NodeV1/data` directory fill up with logs and data.
 
-In another terminal, lets create our subnet (the `ggt utils init` cmd creates a sample genesis with all precompiles enabled):
+In another terminal, lets create our subnet (the `ggt utils init` cmd we ran earlier creates a sample genesis with all precompiles enabled):
 
 ```sh
-ggt wallet create-chain MyChain subnetevm genesis.json
+ggt wallet create-chain NodeV1 MyChain subnetevm subnetevm-genesis.json
 ```
 
-This will create a Subnet, and then inside that new subnet it will create a blockchain with the name `MyChain`, using the `subnetevm` virtual machine we registered earlier, and using the specified genesis file.
+This command assumes NodeV1 is running, and will create a new Subnet, and then inside that subnet it will create a blockchain with the name `MyChain`, using the `subnetevm` virtual machine binary we registered earlier, and using the specified genesis file.
 
 You should see an RPC URL printed to the terminal:
 
 `http://localhost:9650/ext/bc/6SPgMtm5xfZrGGLJztaByMwKGJhrw4WzhKk6nGC5yfXqiJGuT/rpc`
 
-You can now use this to issue commands to your EVM:
+You can now use this to issue commands to your EVM.
 
 ## Info
 
@@ -219,14 +246,22 @@ This makes it easy to do something like this:
 
 ```sh
 export ETH_RPC_URL=`ggt node info | jq -r '.rpcs.MyChain'`
-cast call 0x0000000000000000000000000000000000000000 `cast sig "getCurrentBlockNumber()"`
+cast chain-id
+```
+
+## Block Explorer
+
+Once you have your node running, you can pop up a browser with the [Expedition](https://github.com/xops/expedition) blockchain explorer pointed at your node.
+
+```sh
+ggt node explorer MyChain
 ```
 
 ## Subnet EVM Precompiles
 
-The [Subnet-EVM](https://github.com/ava-labs/subnet-evm) repo has some nice example contracts you can use to interact with the default precompiles.
+The [Subnet-EVM](https://github.com/ava-labs/subnet-evm) repo has some nice example contracts you can use to interact with the default subnetevm and precompiles.
 
-However, in the interest of getting as close to the metal as possible, to really understand how things are working, `ggt` has some convenience commands that wrap the (amazing!) `cast` command from Foundry. The `ggt utils init` command creates default `accounts.json` and `contracts.json` files, that you can modify with your particular info, and we use these to make issuing `cast` commands a little more ergonomic by using those files to resolve user and contract addresses.
+However, in the interest of getting as close to the metal as possible, to really understand how things are working, `ggt` has some convenience commands that wrap the (amazing!) `cast` command from Foundry. The `ggt utils init` command creates default `accounts.json` and `contracts.json` files, that you can modify with your particular info, and we use these to make issuing `cast` commands a little more ergonomic by using those files to resolve user and contract addresses. Out of the box they come with a few users and all the default precompile contract addresses.
 
 Assuming you have your node running, and your `ETH_RPC_URL` pointing to it, you can do things like this:
 

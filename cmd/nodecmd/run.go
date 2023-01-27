@@ -84,6 +84,17 @@ func runNodeAndWait(workDir string, cmd string, args []string) error {
 	}
 }
 
+// TODO This whole thing is wonky.
+// Goals:
+//   - Ability to start a node and wait for Ctl-C to (reliably) quit
+//   - Ability to have USR1 gracefully stop and restart the node
+//   - Listen for changes to vm files and gracefully stop and restart the node
+//   - Good UX and error reporting so user knows whats happening at all times
+//
+// Issues:
+//   - If we have gocmd discard stdout, then if node fails to start we have nothing to show user
+//   - If we keep stdout, it eats major memory unless we have something that clears it out occassionally
+//   - Is it worth using gocmd? Is there something better? Roll our own?
 func runNode(workDir string, cmd string, args []string) error {
 	var envCmd *gocmd.Cmd
 	var finalStatus gocmd.Status
@@ -163,6 +174,7 @@ func runNode(workDir string, cmd string, args []string) error {
 		case finalStatus = <-statusChan:
 			fmt.Println(strings.Join(finalStatus.Stdout, "\n"))
 		case <-doneChan:
+			os.Remove(".pid")
 			if shouldRestart {
 				fmt.Println("Restarting node...")
 				time.Sleep(time.Second * 3)

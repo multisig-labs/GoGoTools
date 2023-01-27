@@ -2,7 +2,7 @@
 
 ## Commands Scratchpad
 
-Some example of the kinds of commands you might run during a dev workflow
+Some example of the kinds of commands you might run during a dev workflow.
 
 ```sh
 ggt utils init
