@@ -93,6 +93,7 @@ func runNodeAndWait(workDir string, cmd string, args []string) error {
 //
 // Issues:
 //   - If we have gocmd discard stdout, then if node fails to start we have nothing to show user
+//   - Maybe just tail main.log to show any errors if node doesnt start?
 //   - If we keep stdout, it eats major memory unless we have something that clears it out occassionally
 //   - Is it worth using gocmd? Is there something better? Roll our own?
 func runNode(workDir string, cmd string, args []string) error {
@@ -100,9 +101,6 @@ func runNode(workDir string, cmd string, args []string) error {
 	var finalStatus gocmd.Status
 	var shouldRestart bool
 
-	// If the node starts sucessfully, then we want to throw away stdout as to not clutter the terminal
-	// but if there is an error starting the node then we want to show the user any error messages.
-	// TODO Figure out a better approach here.
 	if viper.GetBool("verbose") {
 		envCmd = gocmd.NewCmdOptions(gocmd.Options{Buffered: true}, cmd, args...)
 	} else {
@@ -123,6 +121,7 @@ func runNode(workDir string, cmd string, args []string) error {
 
 	fmt.Printf("Avalanche node listening on http://0.0.0.0:%s\n", viper.GetString("port"))
 	fmt.Printf("(Send USR1 to PID %d to restart the node)\n\n", os.Getpid())
+	// TODO dont show the below if they have already created a subnet
 	fmt.Printf("In another terminal, run this command to create a subnetEVM\n")
 	fmt.Printf("  ggt wallet create-chain MyNodeName MyChainName subnetevm\n")
 

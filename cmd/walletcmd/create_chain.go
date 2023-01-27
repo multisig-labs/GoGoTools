@@ -72,6 +72,23 @@ func newCreateChainCmd() *cobra.Command {
 			err = utils.CopyFile(viper.GetString("config-file"), filepath.Join(chainConfigDir, "config.json"))
 			cobra.CheckErr(err)
 
+			// TODO Creating the chain alias would be nice IF I could get it to work for the RPC url too
+			// like instead of http://localhost:9650/ext/bc/ByeHH...yL9/rpc I want http://localhost:9650/ext/bc/MyChainAlias/rpc
+			// but I cant get it to work, not even sure if it is capable of working like that.
+			//
+			// Create an alias in aliases.json
+			// aliasesFile := filepath.Join(workDir, "configs", "chains", "aliases.json")
+			// aliasesContent, err := os.ReadFile(aliasesFile)
+			// cobra.CheckErr(err)
+			// var aliasesJson string
+			// aliasesJson = gjson.Parse(string(aliasesContent)).String()
+			// if aliasesJson == "" {
+			// 	app.Log.Warnf("Chain alias not created, unable to parse %s", aliasesFile)
+			// } else {
+			// 	aliasesJson, _ = sjson.Set(aliasesJson, txID.String(), []string{name})
+			// 	utils.WriteFileBytes(aliasesFile, []byte(aliasesJson))
+			// }
+
 			app.Log.Infof("created new blockchain %s with ID: %s", name, txID)
 			app.Log.Info("NOTE: Check the data/logs/main.log file, as the blockchain may not start if anything is wrong with the VM binary or paths")
 			app.Log.Info("")
