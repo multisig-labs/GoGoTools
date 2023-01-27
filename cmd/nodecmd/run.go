@@ -31,6 +31,9 @@ func newRunCmd() *cobra.Command {
 			}
 			workDir := args[0]
 			c, a := nodeCmd(workDir)
+			if viper.GetBool("verbose") {
+				fmt.Printf("Attempting to start node with this command:\n\n%s %s\n\n", c, strings.Join(a, " "))
+			}
 			runNodeAndWait(workDir, c, a)
 		},
 	}
@@ -71,10 +74,6 @@ func nodeCmd(workDir string) (string, []string) {
 	}
 	return avaBin, args
 }
-
-// TODO make a properly shell-escaped cmd to print out if user wants to copy paste it somewhere
-// func displayCmd(cmd string args []string) string {
-// }
 
 func runNodeAndWait(workDir string, cmd string, args []string) error {
 	for {
