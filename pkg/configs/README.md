@@ -6,6 +6,7 @@ Some example of the kinds of commands you might run during a dev workflow.
 
 ```sh
 ggt utils init
+ggt init v1.9.7 v0.4.8  # This will download avalanchego and subnet-evm from GitHub
 rm -rf NodeV1
 ggt node prepare NodeV1 --ava-bin=$GOPATH/src/github.com/ava-labs/avalanchego/build/avalanchego --vm-name=subnetevm --vm-bin=$GOPATH/src/github.com/ava-labs/subnet-evm/build/subnet-evm
 ggt node run NodeV1 --clear-logs

@@ -58,10 +58,19 @@ You can easily blow away a node and start over with `rm -rf <dirname>`. If you w
 Once you have your node directory prepared, you can run it with `ggt node run <dirname>`. This will start up avalanchego in that directory. By default, `avalanchego` puts its files in `$HOME/.avalanchego`. **WE CHANGE THIS** behavior via command line flags to instead put all logs, db files, configs etc into the specified node directory. In this way its easy to have many directories, with say different binary versions of `avalanchego` and your vms, and switch between them. A caveat is that we expect only **ONE** node to be running at any one time.
 
 ```sh
+# Mac
+mkdir MySubnetProject
+cd MySubnetProject
+ggt utils init v1.9.7 v0.4.8 # Downloads binaries from GitHub
+ggt node prepare NodeV1 --ava-bin=avalanchego-v1.9.7 --vm-name=subnetevm --vm-bin=subnet-evm-v0.4.8
+
+
+# Linux/Win
 mkdir MySubnetProject
 cd MySubnetProject
 ggt utils init
-ggt node prepare NodeV1 --ava-bin=/full/path/to/avalanchego --vm-name=subnetevm --vm-bin=/full/path/to/subnetevm
+# You will need to download or compile the binaries yourself
+ggt node prepare NodeV1 --ava-bin=/path/to/avalanchego-v1.9.7 --vm-name=subnetevm --vm-bin=/path/to/subnet-evm-v0.4.8
 ```
 
 If you then `prepared` another node NodeV2 with some different binary versions, you might have a directory structure that looks like this:

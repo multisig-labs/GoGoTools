@@ -9,9 +9,11 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/hashicorp/go-getter"
 	"github.com/multisig-labs/gogotools/pkg/constants"
 	"github.com/shopspring/decimal"
 	"github.com/tidwall/gjson"
@@ -85,7 +87,11 @@ func FetchRPCGJSON(url string, method string, params string) (*gjson.Result, err
 }
 
 func LinkFile(src, dest string) error {
-	return os.Symlink(src, dest)
+	full, err := filepath.Abs(src)
+	if err != nil {
+		return err
+	}
+	return os.Symlink(full, dest)
 }
 
 func CopyFile(src, dest string) error {
@@ -243,6 +249,83 @@ func ResolveAccountAddrs(accounts *gjson.Result, args []string) []string {
 		}
 	}
 	return out
+}
+
+func DownloadAvalanchego(destDir string, version string) (url string, destFile string, err error) {
+	goos := runtime.GOOS
+	switch goos {
+	case "darwin":
+		url = fmt.Sprintf(
+			"https://github.com/ava-labs/avalanchego/releases/download/%s/avalanchego-macos-%s.zip",
+			version,
+			version,
+		)
+	default:
+		return url, destFile, fmt.Errorf("downloading not supported on OS: %s", goos)
+	}
+
+	fn := fmt.Sprintf("avalanchego-%s", version)
+	destFile = filepath.Join(destDir, fn)
+	if FileExists(destFile) {
+		return url, destFile, fmt.Errorf("file exists: %s", destFile)
+	}
+
+	tdir, err := os.MkdirTemp("", "ggt")
+	if err != nil {
+		return url, destFile, err
+	}
+	defer func() {
+		os.RemoveAll(tdir)
+	}()
+
+	err = getter.GetAny(tdir, url)
+	if err != nil {
+		return url, destFile, err
+	}
+
+	// It unzips into a 'build' folder
+	err = CopyFile(filepath.Join(tdir, "build", "avalanchego"), destFile)
+
+	return url, destFile, err
+}
+
+func DownloadSubnetevm(destDir string, version string) (url string, destFile string, err error) {
+	goarch := runtime.GOARCH
+	goos := runtime.GOOS
+	switch goos {
+	case "darwin":
+		url = fmt.Sprintf(
+			"https://github.com/ava-labs/subnet-evm/releases/download/%s/subnet-evm_%s_darwin_%s.tar.gz",
+			version,
+			version[1:],
+			goarch,
+		)
+	default:
+		return "", "", fmt.Errorf("downloading not supported on OS: %s", goos)
+	}
+
+	fn := fmt.Sprintf("subnet-evm-%s", version)
+	destFile = filepath.Join(destDir, fn)
+	if FileExists(destFile) {
+		return "", "", fmt.Errorf("file exists: %s", destFile)
+	}
+
+	tdir, err := os.MkdirTemp("", "ggt")
+	if err != nil {
+		return "", "", err
+	}
+	defer func() {
+		os.RemoveAll(tdir)
+	}()
+
+	err = getter.GetAny(tdir, url)
+	if err != nil {
+		return "", "", err
+	}
+
+	err = CopyFile(filepath.Join(tdir, "subnet-evm"), destFile)
+
+	return url, destFile, err
 }
 
 // func AvaKeyToEthKey(key *crypto.PrivateKeySECP256K1R) common.Address {

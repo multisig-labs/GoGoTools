@@ -1,8 +1,6 @@
 package utilscmd
 
 import (
-	"fmt"
-
 	"github.com/multisig-labs/gogotools/pkg/configs"
 	"github.com/multisig-labs/gogotools/pkg/utils"
 	"github.com/spf13/cobra"
@@ -11,9 +9,14 @@ import (
 func newInitCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
-		Use:   "init",
-		Short: "Create default config files in the current dir",
-		Long:  `Create default config files in the current dir`,
+		Use:   "init [avago-version] [subnet-evm-version]",
+		Short: "Create default files in the current dir",
+		Long: `Create default config files in the current dir, and
+also attempt to download avalanchego and subnet-evm binaries from
+GitHub.
+
+Example:  ggt init v1.9.7 v0.4.8
+`,
 		Run: func(cmd *cobra.Command, args []string) {
 			files := make(map[string]string)
 			files["accounts.json"] = configs.Accounts
@@ -25,12 +28,31 @@ func newInitCmd() *cobra.Command {
 
 			for fn, content := range files {
 				if utils.FileExists(fn) {
-					fmt.Printf("File exists, skipping %s\n", fn)
+					app.Log.Infof("File exists, skipping %s", fn)
 				} else {
-					fmt.Printf("Creating %s\n", fn)
+					app.Log.Infof("Creating %s", fn)
 					utils.WriteFileBytes(fn, []byte(content))
 				}
 			}
+
+			if len(args) > 0 && args[0] != "" {
+				url, destFile, err := utils.DownloadAvalanchego(".", args[0])
+				if err != nil {
+					app.Log.Warnf("Error downloading %s: %s", url, err)
+				} else {
+					app.Log.Infof("Downloaded %s to %s", url, destFile)
+				}
+			}
+
+			if len(args) > 1 && args[1] != "" {
+				url, destFile, err := utils.DownloadSubnetevm(".", args[1])
+				if err != nil {
+					app.Log.Warnf("Error downloading %s: %s", url, err)
+				} else {
+					app.Log.Infof("Downloaded %s to %s", url, destFile)
+				}
+			}
+
 		},
 	}
 
