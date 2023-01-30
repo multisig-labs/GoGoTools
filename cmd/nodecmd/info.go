@@ -17,18 +17,16 @@ func newInfoCmd() *cobra.Command {
 		Long:  ``,
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			s, err := getInfo()
-			if err != nil {
-				app.Log.Fatalf("Error: %s", err)
-			}
-			fmt.Println(s)
+			result, err := getInfo()
+			cobra.CheckErr(err)
+			fmt.Println(result.String())
 		},
 	}
 	return cmd
 }
 
 // It's not you, Types, it's me. I think we need a break for a bit.
-func getInfo() (string, error) {
+func getInfo() (*gjson.Result, error) {
 	uri := viper.GetString("node-url")
 	urlInfo := fmt.Sprintf("%s/ext/info", uri)
 	urlP := fmt.Sprintf("%s/ext/bc/P", uri)
@@ -36,42 +34,42 @@ func getInfo() (string, error) {
 
 	getNetworkName, err := utils.FetchRPCGJSON(urlInfo, "info.getNetworkName", "")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	getNetworkID, err := utils.FetchRPCGJSON(urlInfo, "info.getNetworkID", "")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	getNodeID, err := utils.FetchRPCGJSON(urlInfo, "info.getNodeID", "")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	getNodeVersion, err := utils.FetchRPCGJSON(urlInfo, "info.getNodeVersion", "")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	getVMs, err := utils.FetchRPCGJSON(urlInfo, "info.getVMs", "")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	getUptime, err := utils.FetchRPCGJSON(urlInfo, "info.uptime", "")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	getBlockchains, err := utils.FetchRPCGJSON(urlP, "platform.getBlockchains", "")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	getSubnets, err := utils.FetchRPCGJSON(urlP, "platform.getSubnets", "")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	aliases := `{"blockchainAliases":"AdminAPI disabled on node"}`
@@ -86,8 +84,9 @@ func getInfo() (string, error) {
 		// If subnet didnt start for some reason, this will be blank
 		s := blockchainAliases.Get("result.aliases").String()
 		if s == "" {
-			s = `["ERROR starting blockchain"]`
+			s = `["blockchain not started"]`
 		}
+
 		aliases, _ = sjson.SetRaw(aliases, fmt.Sprintf("blockchainAliases.%s", blockchainID), s)
 		return true
 	})
@@ -115,6 +114,6 @@ func getInfo() (string, error) {
 	out, _ = sjson.SetRaw(out, "aliases", aliases)
 	out, _ = sjson.SetRaw(out, "rpcs", rpcs)
 
-	s := gjson.Parse(out).String()
-	return s, nil
+	result := gjson.Parse(out)
+	return &result, nil
 }

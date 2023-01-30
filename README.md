@@ -135,7 +135,7 @@ The default `node-config.json` configures `avalanchego` to be a single node with
 Now we can start our node:
 
 ```sh
-ggt node run NodeV1 (--clear-logs to delete data/logs before starting node)
+ggt node run NodeV1 (--clear-logs to delete logs before starting node)
 ```
 
 This will start `avalanchego` from the `NodeV1` directory and you should see the `NodeV1/data` directory fill up with logs and data.

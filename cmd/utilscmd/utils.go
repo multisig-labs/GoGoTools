@@ -13,9 +13,10 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 	app = injectedApp
 
 	cmd := &cobra.Command{
-		Use:   "utils",
-		Short: "Misc utilities",
-		Long:  ``,
+		Use:          "utils",
+		Short:        "Misc utilities",
+		Long:         ``,
+		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			err := cmd.Help()
 			if err != nil {
@@ -26,7 +27,8 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 
 	cmd.AddCommand(newInitCmd())
 	cmd.AddCommand(newMsgDigestCmd())
-	cmd.AddCommand(newChainIDCmd())
+	cmd.AddCommand(newVMIDCmd())
+	cmd.AddCommand(newVMNameCmd())
 
 	return cmd
 }

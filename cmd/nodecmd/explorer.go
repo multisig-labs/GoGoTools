@@ -5,7 +5,6 @@ import (
 
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
-	"github.com/tidwall/gjson"
 )
 
 func newExplorerCmd() *cobra.Command {
@@ -15,9 +14,9 @@ func newExplorerCmd() *cobra.Command {
 		Long:  ``,
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			s, err := getInfo()
+			result, err := getInfo()
 			cobra.CheckErr(err)
-			rpc := gjson.Parse(s).Get(fmt.Sprintf("rpcs.%s", args[0])).String()
+			rpc := result.Get(fmt.Sprintf("rpcs.%s", args[0])).String()
 			if rpc == "" {
 				app.Log.Fatalf("Unable to find chain-name %s in the 'rpcs' key of 'ggt node info'", args[0])
 			}

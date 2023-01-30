@@ -31,14 +31,12 @@ func newRunCmd() *cobra.Command {
 			}
 			workDir := args[0]
 			c, a := nodeCmd(workDir)
-			if viper.GetBool("verbose") {
-				fmt.Printf("Attempting to start node with this command:\n\n%s %s\n\n", c, strings.Join(a, " "))
-			}
+			app.Log.Debugf("Attempting to start node with this command:\n\n%s %s\n\n", c, strings.Join(a, " "))
 			runNodeAndWait(workDir, c, a)
 		},
 	}
 	cmd.Flags().String("port", "9650", "Port that the node will listen on for API commands")
-	cmd.Flags().Bool("clear-logs", false, "Delete data/logs/* before starting node")
+	cmd.Flags().Bool("clear-logs", false, "Delete logs/* before starting node")
 	cmd.Flags().Bool("watch", false, "(Experimental!) Watch data/bin and restart on any file changes")
 
 	return cmd

@@ -1,8 +1,6 @@
 package nodecmd
 
 import (
-	"fmt"
-
 	"github.com/multisig-labs/gogotools/pkg/application"
 	"github.com/spf13/cobra"
 )
@@ -16,11 +14,8 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 		Use:   "node",
 		Short: "Create and run a single-node avalanchego",
 		Long:  ``,
-		Run: func(cmd *cobra.Command, args []string) {
-			err := cmd.Help()
-			if err != nil {
-				fmt.Println(err)
-			}
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cmd.Help()
 		},
 	}
 

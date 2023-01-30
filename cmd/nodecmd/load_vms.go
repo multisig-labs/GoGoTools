@@ -6,6 +6,7 @@ import (
 	"github.com/multisig-labs/gogotools/pkg/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/tidwall/gjson"
 )
 
 func newLoadVMsCmd() *cobra.Command {
@@ -14,19 +15,18 @@ func newLoadVMsCmd() *cobra.Command {
 		Short: "Dynamically loads any virtual machines installed on the node as plugins.",
 		Long:  ``,
 		Args:  cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return loadVMs()
+		Run: func(cmd *cobra.Command, args []string) {
+			result, err := loadVMs()
+			cobra.CheckErr(err)
+			fmt.Println(result.Get("result").String())
 		},
 	}
 	return cmd
 }
 
-func loadVMs() error {
+func loadVMs() (*gjson.Result, error) {
 	uri := viper.GetString("node-url")
 	urlAdmin := fmt.Sprintf("%s/ext/admin", uri)
 
-	loadVms, err := utils.FetchRPCGJSON(urlAdmin, "admin.loadVMs", "")
-	cobra.CheckErr(err)
-	fmt.Println(loadVms.Get("result").String())
-	return nil
+	return utils.FetchRPCGJSON(urlAdmin, "admin.loadVMs", "")
 }

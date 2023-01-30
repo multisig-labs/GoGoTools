@@ -45,7 +45,7 @@ func newPrepareCmd() *cobra.Command {
 				return err
 			}
 
-			fmt.Printf("Success! run 'ggt node run %s' to start the node", args[0])
+			app.Log.Infof("Success! run 'ggt node run %s' to start the node", args[0])
 			return nil
 		},
 	}

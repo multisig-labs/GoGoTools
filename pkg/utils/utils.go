@@ -253,16 +253,7 @@ func ResolveAccountAddrs(accounts *gjson.Result, args []string) []string {
 
 func DownloadAvalanchego(destDir string, version string) (url string, destFile string, err error) {
 	goos := runtime.GOOS
-	switch goos {
-	case "darwin":
-		url = fmt.Sprintf(
-			"https://github.com/ava-labs/avalanchego/releases/download/%s/avalanchego-macos-%s.zip",
-			version,
-			version,
-		)
-	default:
-		return url, destFile, fmt.Errorf("downloading not supported on OS: %s", goos)
-	}
+	goarch := runtime.GOARCH
 
 	fn := fmt.Sprintf("avalanchego-%s", version)
 	destFile = filepath.Join(destDir, fn)
@@ -278,13 +269,34 @@ func DownloadAvalanchego(destDir string, version string) (url string, destFile s
 		os.RemoveAll(tdir)
 	}()
 
+	var exeFile string
+	switch goos {
+	case "darwin":
+		url = fmt.Sprintf(
+			"https://github.com/ava-labs/avalanchego/releases/download/%s/avalanchego-macos-%s.zip",
+			version,
+			version,
+		)
+		// It unzips into a 'build' folder
+		exeFile = filepath.Join(tdir, "build", "avalanchego")
+	case "linux":
+		url = fmt.Sprintf(
+			"https://github.com/ava-labs/avalanchego/releases/download/%s/avalanchego-linux-%s-%s.tar.gz",
+			version,
+			goarch,
+			version,
+		)
+		exeFile = filepath.Join(tdir, fmt.Sprintf("avalanchego-%s", version), "avalanchego")
+	default:
+		return url, destFile, fmt.Errorf("downloading not supported on OS: %s", goos)
+	}
+
 	err = getter.GetAny(tdir, url)
 	if err != nil {
 		return url, destFile, err
 	}
 
-	// It unzips into a 'build' folder
-	err = CopyFile(filepath.Join(tdir, "build", "avalanchego"), destFile)
+	err = CopyFile(exeFile, destFile)
 
 	return url, destFile, err
 }
@@ -296,6 +308,13 @@ func DownloadSubnetevm(destDir string, version string) (url string, destFile str
 	case "darwin":
 		url = fmt.Sprintf(
 			"https://github.com/ava-labs/subnet-evm/releases/download/%s/subnet-evm_%s_darwin_%s.tar.gz",
+			version,
+			version[1:],
+			goarch,
+		)
+	case "linux":
+		url = fmt.Sprintf(
+			"https://github.com/ava-labs/subnet-evm/releases/download/%s/subnet-evm_%s_linux_%s.tar.gz",
 			version,
 			version[1:],
 			goarch,

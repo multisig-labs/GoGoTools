@@ -34,9 +34,9 @@ func New() *GoGoTools {
 func (ggt *GoGoTools) Verbose() {
 	encCfg := zap.NewDevelopmentEncoderConfig()
 	encCfg.TimeKey = zapcore.OmitKey
-	encCfg.LevelKey = "L"
+	encCfg.LevelKey = zapcore.OmitKey
 	encCfg.NameKey = zapcore.OmitKey
-	encCfg.CallerKey = "C"
+	encCfg.CallerKey = zapcore.OmitKey
 	encCfg.FunctionKey = zapcore.OmitKey
 	encCfg.StacktraceKey = zapcore.OmitKey
 

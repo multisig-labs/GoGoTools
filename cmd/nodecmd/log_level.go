@@ -18,16 +18,15 @@ func newLogLevelCmd() *cobra.Command {
 		Long:  `Set the log level for a running node (DEBUG, INFO, ERROR) and for a specific chain (X, P, C, BlkchainID)`,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			uri := viper.GetString("node-url")
-
-			return setLoggerLevel(uri, strings.ToLower(args[0]), strings.ToUpper(args[1]))
+			return setLoggerLevel(strings.ToLower(args[0]), strings.ToUpper(args[1]))
 		},
 	}
 	return cmd
 }
 
-func setLoggerLevel(uri string, level string, chainName string) error {
+func setLoggerLevel(level string, chainName string) error {
 	ctx := context.Background()
+	uri := viper.GetString("node-url")
 
 	if chainName == "X" || chainName == "P" {
 		c := admin.NewClient(uri)
