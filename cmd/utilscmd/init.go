@@ -20,11 +20,13 @@ Example:  ggt init v1.9.7 v0.4.8
 		Run: func(cmd *cobra.Command, args []string) {
 			files := make(map[string]string)
 			files["accounts.json"] = configs.Accounts
+			files["cchain-config.json"] = configs.CChainConfig
 			files["contracts.json"] = configs.Contracts
-			files["subnetevm-genesis.json"] = configs.SubnetEVMGenesis
-			files["subnetevm-config.json"] = configs.SubnetEVMConfig
 			files["node-config.json"] = configs.NodeConfig
 			files["README.md"] = configs.Readme
+			files["subnetevm-genesis.json"] = configs.SubnetEVMGenesis
+			files["subnetevm-config.json"] = configs.SubnetEVMConfig
+			files["xchain-config.json"] = configs.XChainConfig
 
 			for fn, content := range files {
 				if utils.FileExists(fn) {

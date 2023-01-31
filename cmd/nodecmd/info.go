@@ -74,7 +74,6 @@ func getInfo() (*gjson.Result, error) {
 
 	aliases := `{"blockchainAliases":"AdminAPI disabled on node"}`
 	getBlockchains.Get("result.blockchains").ForEach(func(key, value gjson.Result) bool {
-		// println(value.Get("id").String())
 		blockchainID := value.Get("id").String()
 		blockchainAliases, err := utils.FetchRPCGJSON(urlAdmin, "admin.getChainAliases", fmt.Sprintf(`{"chain":"%s"}`, blockchainID))
 		if err != nil {
@@ -84,19 +83,19 @@ func getInfo() (*gjson.Result, error) {
 		// If subnet didnt start for some reason, this will be blank
 		s := blockchainAliases.Get("result.aliases").String()
 		if s == "" {
-			s = `["blockchain not started"]`
+			s = `["blockchain not started, check logs"]`
 		}
 
 		aliases, _ = sjson.SetRaw(aliases, fmt.Sprintf("blockchainAliases.%s", blockchainID), s)
 		return true
 	})
 
-	rpcs := "{}"
+	url := viper.GetString("node-url")
+	rpcs := fmt.Sprintf(`{"C":"%s/ext/bc/C/rpc"}`, url)
 	getBlockchains.Get("result.blockchains").ForEach(func(key, value gjson.Result) bool {
 		if value.Get("subnetID").String() != "11111111111111111111111111111111LpoYY" {
 			blockchainID := value.Get("id").String()
 			name := value.Get("name").String()
-			url := viper.GetString("node-url")
 			rpcs, _ = sjson.Set(rpcs, name, fmt.Sprintf("%s/ext/bc/%s/rpc", url, blockchainID))
 		}
 		return true

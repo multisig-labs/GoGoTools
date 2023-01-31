@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -118,6 +119,29 @@ func CopyFile(src, dest string) error {
 	}
 	if err = out.Chmod(constants.DefaultPerms755); err != nil {
 		return err
+	}
+	return nil
+}
+
+// Returns filenames that have ext in root
+func FilePathWalk(root string, ext string) ([]string, error) {
+	var files []string
+	err := filepath.WalkDir(root, func(path string, info fs.DirEntry, err error) error {
+		if info != nil && !info.IsDir() && strings.HasSuffix(info.Name(), ext) {
+			files = append(files, path)
+		}
+		return nil
+	})
+	return files, err
+}
+
+func Truncate(filename string, perm os.FileMode) error {
+	f, err := os.OpenFile(filename, os.O_TRUNC, perm)
+	if err != nil {
+		return fmt.Errorf("could not open file %q for truncation: %v", filename, err)
+	}
+	if err = f.Close(); err != nil {
+		return fmt.Errorf("could not close file handler for %q after truncation: %v", filename, err)
 	}
 	return nil
 }
@@ -345,6 +369,53 @@ func DownloadSubnetevm(destDir string, version string) (url string, destFile str
 	err = CopyFile(filepath.Join(tdir, "subnet-evm"), destFile)
 
 	return url, destFile, err
+}
+
+// Take control over where things are placed
+
+type DirectoryLayout struct {
+	BinDir          string
+	PluginDir       string
+	DataDir         string
+	ConfigDir       string
+	ChainConfigDir  string
+	VMConfigDir     string
+	CChainConfigDir string
+	XChainConfigDir string
+}
+
+type FileLocations struct {
+	AvaBinFile       string
+	ConfigFile       string
+	CChainConfigFile string
+	XChainConfigFile string
+	VMAliasesFile    string
+	ChainAliasesFile string
+}
+
+func NewDirectoryLayout(workDir string) DirectoryLayout {
+	return DirectoryLayout{
+		BinDir:          filepath.Join(workDir, "bin"),
+		PluginDir:       filepath.Join(workDir, "bin", "plugins"),
+		DataDir:         filepath.Join(workDir, "data"),
+		ConfigDir:       filepath.Join(workDir, "configs"),
+		ChainConfigDir:  filepath.Join(workDir, "configs", "chains"),
+		CChainConfigDir: filepath.Join(workDir, "configs", "chains", "C"),
+		XChainConfigDir: filepath.Join(workDir, "configs", "chains", "X"),
+		VMConfigDir:     filepath.Join(workDir, "configs", "vms"),
+	}
+}
+
+func NewFileLocations(workDir string) FileLocations {
+	return FileLocations{
+		AvaBinFile:       filepath.Join(workDir, "bin", "avalanchego"),
+		ConfigFile:       filepath.Join(workDir, "configs", "node-config.json"),
+		ChainAliasesFile: filepath.Join(workDir, "configs", "chains", "aliases.json"),
+		CChainConfigFile: filepath.Join(workDir, "configs", "chains", "C", "config.json"),
+		XChainConfigFile: filepath.Join(workDir, "configs", "chains", "X", "config.json"),
+		VMAliasesFile:    filepath.Join(workDir, "configs", "vms", "aliases.json"),
+	}
+
 }
 
 // func AvaKeyToEthKey(key *crypto.PrivateKeySECP256K1R) common.Address {

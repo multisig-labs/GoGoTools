@@ -16,6 +16,8 @@ import (
 	"github.com/multisig-labs/gogotools/pkg/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/tidwall/gjson"
+	"github.com/tidwall/sjson"
 )
 
 func newCreateChainCmd() *cobra.Command {
@@ -41,6 +43,17 @@ func newCreateChainCmd() *cobra.Command {
 				return fmt.Errorf("node directory does not exist: %s", workDir)
 			}
 
+			// Dont allow duplicate chain names, for simplicity
+			uri := viper.GetString("node-url")
+			urlP := fmt.Sprintf("%s/ext/bc/P", uri)
+			getBlockchains, err := utils.FetchRPCGJSON(urlP, "platform.getBlockchains", "")
+			cobra.CheckErr(err)
+			for _, obj := range getBlockchains.Get("result.blockchains").Array() {
+				if obj.Get("name").String() == name {
+					return fmt.Errorf("blockchain %s already exists, aborting", name)
+				}
+			}
+
 			viper.BindPFlags(cmd.Flags())
 
 			key, err := decodePrivateKey(viper.GetString("pk"))
@@ -56,14 +69,15 @@ func newCreateChainCmd() *cobra.Command {
 			cobra.CheckErr(err)
 
 			if subnetID == ids.Empty {
-				app.Log.Debug("No SubnetID supplied, creating a new Subnet")
+				app.Log.Info("No SubnetID supplied, creating...")
 				subnetID, err = createSubnet(key)
 				cobra.CheckErr(err)
+				app.Log.Infof("SubnetID %s created", subnetID)
 			}
 
 			txID, err := createChain(key, subnetID, name, vmID, genesisBytes)
 			cobra.CheckErr(err)
-			app.Log.Debugf("Chain created with txID: %s", txID)
+			app.Log.Infof("Chain created with txID: %s", txID)
 
 			// Copy the chain config to the right place
 			chainConfigDir := filepath.Join(workDir, "configs", "chains", txID.String())
@@ -77,17 +91,17 @@ func newCreateChainCmd() *cobra.Command {
 			// but I cant get it to work, not even sure if it is capable of working like that.
 			//
 			// Create an alias in aliases.json
-			// aliasesFile := filepath.Join(workDir, "configs", "chains", "aliases.json")
-			// aliasesContent, err := os.ReadFile(aliasesFile)
-			// cobra.CheckErr(err)
-			// var aliasesJson string
-			// aliasesJson = gjson.Parse(string(aliasesContent)).String()
-			// if aliasesJson == "" {
-			// 	app.Log.Warnf("Chain alias not created, unable to parse %s", aliasesFile)
-			// } else {
-			// 	aliasesJson, _ = sjson.Set(aliasesJson, txID.String(), []string{name})
-			// 	utils.WriteFileBytes(aliasesFile, []byte(aliasesJson))
-			// }
+			fileLocations := utils.NewFileLocations(workDir)
+			aliasesContent, err := os.ReadFile(fileLocations.ChainAliasesFile)
+			cobra.CheckErr(err)
+			var aliasesJson string
+			aliasesJson = gjson.Parse(string(aliasesContent)).String()
+			if aliasesJson == "" {
+				app.Log.Warnf("Chain alias not created, unable to parse %s", fileLocations.ChainAliasesFile)
+			} else {
+				aliasesJson, _ = sjson.Set(aliasesJson, txID.String(), []string{name})
+				utils.WriteFileBytes(fileLocations.ChainAliasesFile, []byte(aliasesJson))
+			}
 
 			app.Log.Infof("created new blockchain %s with ID: %s", name, txID)
 			app.Log.Info("NOTE: Check the data/logs/main.log file, as the blockchain may not start if anything is wrong with the VM binary or paths")

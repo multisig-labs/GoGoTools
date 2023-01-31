@@ -1,7 +1,7 @@
 <h1 align="center">GoGoTools 🎈</h1>
 <p align="center">A (growing) collection of useful tools for Avalanche subnet developers.</p>
 
-GGT currently lets you quickly spin up a subnet environment that has avalanchego + subnet-evm + precompiles, allowing you to:
+GGT currently lets you quickly spin up a subnet dev environment that has avalanchego + subnet-evm + precompiles, allowing you to:
 
 - Make your “Time to RPC" 10x faster
 - Easily find/tweak/experiment with configs and precompiles
@@ -51,11 +51,15 @@ We are still trying to find the optimal workflows for doing this kind of dev wor
 
 ### Workflow
 
-The idea is that we make a new, empty project directory, then use `ggt prepare` to create one or many `nodes`, which are basically a directory with `avalancego`, a vm binary, and a bunch of configs all setup in the right place.
+The idea is that we make a new, empty project directory, then use `ggt prepare` to create one or many `nodes`, which are basically a directory with `avalancego`, a vm binary, and a bunch of configs all setup in the right place. By default, `avalanchego` puts its files in `$HOME/.avalanchego`. **WE CHANGE THIS** behavior via command line flags to instead put all logs, db files, configs etc into the specified node directory, and organized a bit differently. The `start.sh` script starts up avalanchego with the correct command-line args.
 
 You can easily blow away a node and start over with `rm -rf <dirname>`. If you want to save off your progress just `cp` the dir to a new name.
 
-Once you have your node directory prepared, you can run it with `ggt node run <dirname>`. This will start up avalanchego in that directory. By default, `avalanchego` puts its files in `$HOME/.avalanchego`. **WE CHANGE THIS** behavior via command line flags to instead put all logs, db files, configs etc into the specified node directory. In this way its easy to have many directories, with say different binary versions of `avalanchego` and your vms, and switch between them. A caveat is that we expect only **ONE** node to be running at any one time.
+Once you have your node directory prepared, you can run it with `ggt node run <dirname>`. This will start up avalanchego in that directory. In this way its easy to have many directories, with say different binary versions of `avalanchego` and your vms, and switch between them. A caveat is that we expect only **ONE** node to be running at any one time.
+
+If you have problems with the `ggt node run` command (it's currently under heavy development) you can always run the `start.sh` script inside each node directory to get things going.
+
+### Example
 
 ```sh
 # Mac
@@ -63,14 +67,6 @@ mkdir MySubnetProject
 cd MySubnetProject
 ggt utils init v1.9.7 v0.4.8 # Downloads binaries from GitHub
 ggt node prepare NodeV1 --ava-bin=avalanchego-v1.9.7 --vm-name=subnetevm --vm-bin=subnet-evm-v0.4.8
-
-
-# Linux/Win
-mkdir MySubnetProject
-cd MySubnetProject
-ggt utils init
-# You will need to download or compile the binaries yourself
-ggt node prepare NodeV1 --ava-bin=/path/to/avalanchego-v1.9.7 --vm-name=subnetevm --vm-bin=/path/to/subnet-evm-v0.4.8
 ```
 
 If you then `prepared` another node NodeV2 with some different binary versions, you might have a directory structure that looks like this:
@@ -86,11 +82,14 @@ MySubnetProject
 │   │   ├── chains
 │   │   │   ├── C
 │   │   │   │   └── config.json
+│   │   │   ├── X
+│   │   │   │   └── config.json
 │   │   │   └── aliases.json
 │   │   ├── node-config.json
 │   │   └── vms
 │   │       └── aliases.json
-│   └── data
+│   ├── data
+│   └── start.sh
 ├── NodeV2
 │   ├── bin
 │   │   ├── avalanchego -> /path/to/avalanchego-v1.9.7
@@ -100,11 +99,14 @@ MySubnetProject
 │   │   ├── chains
 │   │   │   ├── C
 │   │   │   │   └── config.json
+│   │   │   ├── X
+│   │   │   │   └── config.json
 │   │   │   └── aliases.json
 │   │   ├── node-config.json
 │   │   └── vms
 │   │       └── aliases.json
-│   └── data
+│   ├── data
+│   └── start.sh
 ├── README.md
 ├── accounts.json
 ├── contracts.json
@@ -115,22 +117,6 @@ MySubnetProject
 ```
 
 (Note that the `--vm-name=subnetevm` name you supplied for your VM (which can be any name) has been converted into an Avalanche `ids.ID` `srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy` and symlinked to the vm binary you specified)
-
-The default `node-config.json` configures `avalanchego` to be a single node with no staking. In this mode, among other things, it will not try to bootstrap or connect to any other nodes, and will validate any subnet without having to specify it via the `--track-subnets` flag.
-
-```json
-{
-  "network-id": "local",
-  "staking-enabled": false,
-  "staking-ephemeral-cert-enabled": true,
-  "staking-ephemeral-signer-enabled": true,
-  "index-enabled": true,
-  "api-keystore-enabled": true,
-  "api-admin-enabled": true,
-  "log-rotater-max-files": 1,
-  "log-rotater-max-size": 1
-}
-```
 
 Now we can start our node:
 

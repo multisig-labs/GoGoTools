@@ -1,13 +1,17 @@
 package nodecmd
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/multisig-labs/gogotools/pkg/configs"
+	"github.com/multisig-labs/gogotools/pkg/constants"
 	"github.com/multisig-labs/gogotools/pkg/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -37,10 +41,6 @@ func newPrepareCmd() *cobra.Command {
 				}
 			}
 
-			if exists := utils.FileExists(viper.GetString("node-config")); !exists {
-				return fmt.Errorf("node-config file does not exist: %s", viper.GetString("node-config"))
-			}
-
 			if err := prepareWorkDir(args[0], viper.GetString("ava-bin"), viper.GetString("vm-bin"), viper.GetString("vm-name")); err != nil {
 				return err
 			}
@@ -52,7 +52,6 @@ func newPrepareCmd() *cobra.Command {
 	cmd.Flags().String("ava-bin", "", "Location of avalanchego binary (also AVA_BIN)")
 	cmd.Flags().String("vm-bin", "", "(optional) Location of subnetevm binary (also VM_BIN)")
 	cmd.Flags().String("vm-name", "subnetevm", "(optional) Name of vm (also VM_NAME)")
-	cmd.Flags().String("node-config", "node-config.json", "Location of node config file, also (NODE_CONFIG)")
 	return cmd
 }
 
@@ -60,37 +59,33 @@ func prepareWorkDir(workDir string, avaBin string, vmBin string, vmName string) 
 	if _, err := os.Stat(workDir); err == nil {
 		return fmt.Errorf("%s exists, aborting", workDir)
 	}
+	err := mkDirs(workDir)
+	cobra.CheckErr(err)
 
-	// TODO clean all this up somehow (struct?)
-	binPath := filepath.Join(workDir, "bin")
-	pluginsPath := filepath.Join(workDir, "bin", "plugins")
-	dataPath := filepath.Join(workDir, "data")
-	configsPath := filepath.Join(workDir, "configs")
-	configsVmsPath := filepath.Join(workDir, "configs", "vms")
-	configsChainsPath := filepath.Join(workDir, "configs", "chains")
-	configsChainsCPath := filepath.Join(workDir, "configs", "chains", "C")
+	dirStruct := utils.NewDirectoryLayout(workDir)
+	fileLocations := utils.NewFileLocations(workDir)
 
-	dirList := []string{binPath, pluginsPath, dataPath, configsPath, configsVmsPath, configsChainsPath, configsChainsCPath}
-	for i := 0; i < len(dirList); i++ {
-		err := os.MkdirAll(dirList[i], os.ModePerm)
-		if err != nil {
-			return err
-		}
+	bash, err := prepareBashScript(workDir)
+	cobra.CheckErr(err)
+	app.Log.Infof("Creating %s", filepath.Join(workDir, constants.BashScriptFilename))
+	err = ioutil.WriteFile(filepath.Join(workDir, constants.BashScriptFilename), []byte(bash), constants.DefaultPerms755)
+	cobra.CheckErr(err)
+
+	app.Log.Infof("Linking %s to %s", avaBin, fileLocations.AvaBinFile)
+	if err := utils.LinkFile(avaBin, fileLocations.AvaBinFile); err != nil {
+		return fmt.Errorf("failed linking file: %w", err)
 	}
 
-	fn := filepath.Join(binPath, "avalanchego")
-	if err := utils.LinkFile(avaBin, fn); err != nil {
-		return fmt.Errorf("failed linking file '%s' to '%s': %w", avaBin, fn, err)
-	}
-
-	fn = filepath.Join(configsPath, "node-config.json")
-	ioutil.WriteFile(fn, []byte(configs.NodeConfig), 0644)
-
-	fn = filepath.Join(configsChainsCPath, "config.json")
-	ioutil.WriteFile(fn, []byte(configs.SubnetEVMConfig), 0644)
-
-	fn = filepath.Join(configsChainsPath, "aliases.json")
-	ioutil.WriteFile(fn, []byte("{}"), 0644)
+	// Copy configs from cur dir where `ggt init` put some defaults.
+	app.Log.Infof("Copying %s to %s", constants.NodeConfigFilename, fileLocations.ConfigFile)
+	err = utils.CopyFile(constants.NodeConfigFilename, fileLocations.ConfigFile)
+	cobra.CheckErr(err)
+	app.Log.Infof("Copying %s to %s", constants.CChainConfigFilename, fileLocations.CChainConfigFile)
+	err = utils.CopyFile(constants.CChainConfigFilename, fileLocations.CChainConfigFile)
+	cobra.CheckErr(err)
+	app.Log.Infof("Copying %s to %s", constants.XChainConfigFilename, fileLocations.XChainConfigFile)
+	err = utils.CopyFile(constants.XChainConfigFilename, fileLocations.XChainConfigFile)
+	cobra.CheckErr(err)
 
 	// Always write a vm aliases file even if empty to make avalanchego happy
 	vmAliases := "{}"
@@ -103,15 +98,52 @@ func prepareWorkDir(workDir string, avaBin string, vmBin string, vmName string) 
 			return err
 		}
 
-		fn = filepath.Join(pluginsPath, vmID.String())
+		fn := filepath.Join(dirStruct.PluginDir, vmID.String())
+		app.Log.Infof("Linking %s to %s", vmBin, fn)
 		if err := utils.LinkFile(vmBin, fn); err != nil {
-			return fmt.Errorf("failed linking file '%s' to '%s': %w", vmBin, fn, err)
+			return fmt.Errorf("failed linking file %w", err)
 		}
 
 		vmAliases, _ = sjson.Set("{}", vmID.String(), []string{vmName})
 	}
-	fn = filepath.Join(configsVmsPath, "aliases.json")
-	ioutil.WriteFile(fn, []byte(vmAliases), 0644)
+	app.Log.Infof("Creating %s", fileLocations.VMAliasesFile)
+	err = ioutil.WriteFile(fileLocations.VMAliasesFile, []byte(vmAliases), 0644)
+	cobra.CheckErr(err)
 
+	app.Log.Infof("Creating %s", fileLocations.ChainAliasesFile)
+	err = ioutil.WriteFile(fileLocations.ChainAliasesFile, []byte("{}"), 0644)
+	cobra.CheckErr(err)
+
+	return err
+}
+
+type bashCmdParams struct {
+	utils.DirectoryLayout
+	utils.FileLocations
+}
+
+func prepareBashScript(workDir string) (string, error) {
+	layout := utils.NewDirectoryLayout("")
+	files := utils.NewFileLocations("")
+	params := bashCmdParams{layout, files}
+	bash := configs.StartBash
+	buf := &bytes.Buffer{}
+	t, err := template.New("").Parse(bash)
+	if err != nil {
+		return "", nil
+	}
+	err = t.Execute(buf, params)
+	return buf.String(), err
+}
+
+func mkDirs(workDir string) error {
+	dirStruct := utils.NewDirectoryLayout(workDir)
+	values := reflect.ValueOf(dirStruct)
+	for i := 0; i < values.NumField(); i++ {
+		err := os.MkdirAll(values.Field(i).String(), os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

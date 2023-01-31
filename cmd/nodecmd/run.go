@@ -10,6 +10,7 @@ import (
 	"time"
 
 	gocmd "github.com/go-cmd/cmd"
+	"github.com/multisig-labs/gogotools/pkg/constants"
 	"github.com/multisig-labs/gogotools/pkg/utils"
 	"github.com/radovskyb/watcher"
 	"github.com/spf13/cobra"
@@ -23,85 +24,69 @@ func newRunCmd() *cobra.Command {
 		Long:  ``,
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			workDir := args[0]
 			viper.BindPFlags(cmd.Flags())
+
+			exitIfRunning()
+
+			// Truncate instead of delete so log tailing is not affected
 			if viper.GetBool("clear-logs") {
-				logsPath := filepath.Join(args[0], "data", "logs")
-				err := os.RemoveAll(logsPath)
+				logsPath := filepath.Join(workDir, "data", "logs")
+				logFiles, err := utils.FilePathWalk(logsPath, "log")
+				cobra.CheckErr(err)
+				for _, f := range logFiles {
+					err := utils.Truncate(f, constants.DefaultPerms755)
+					cobra.CheckErr(err)
+				}
 				cobra.CheckErr(err)
 			}
-			workDir := args[0]
-			c, a := nodeCmd(workDir)
-			app.Log.Debugf("Attempting to start node with this command:\n\n%s %s\n\n", c, strings.Join(a, " "))
-			runNodeAndWait(workDir, c, a)
+
+			startCmd := filepath.Join(workDir, constants.BashScriptFilename)
+			runNodeAndWait(workDir, startCmd)
 		},
 	}
-	cmd.Flags().String("port", "9650", "Port that the node will listen on for API commands")
 	cmd.Flags().Bool("clear-logs", false, "Delete logs/* before starting node")
 	cmd.Flags().Bool("watch", false, "(Experimental!) Watch data/bin and restart on any file changes")
 
 	return cmd
 }
 
-func nodeCmd(workDir string) (string, []string) {
-	// TODO combine this config with prepare
-	avaBin := filepath.Join(workDir, "bin", "avalanchego")
-	dataPath := filepath.Join(workDir, "data")
-	chainConfigsPath := filepath.Join(workDir, "configs", "chains")
-	// subnetConfigsPath := filepath.Join(workDir, "configs", "subnets")
-	vmAliasesConfig := filepath.Join(workDir, "configs", "vms", "aliases.json")
-	chainAliasesConfig := filepath.Join(workDir, "configs", "chains", "aliases.json")
-	nodeConfig := filepath.Join(workDir, "configs", "node-config.json")
-	pluginsPath := filepath.Join(workDir, "bin", "plugins")
-
-	// TODO Not sure why we have to also specify --chain-config-dir etc, it should just be by default a child of --data-dir ?
-	args := []string{
-		"--http-host=0.0.0.0", // allow connections from anywhere
-		fmt.Sprintf("--http-port=%s", viper.GetString("port")),
-		"--log-display-level=off", // only log to files
-		"--public-ip=127.0.0.1",   // this disables NAT
-		"--bootstrap-ids=",        // dont try to connect to anyone else
-		"--bootstrap-ips=",
-		fmt.Sprintf("--data-dir=%s", dataPath),
-		fmt.Sprintf("--config-file=%s", nodeConfig),
-		fmt.Sprintf("--chain-config-dir=%s", chainConfigsPath),
-		// fmt.Sprintf("--subnet-config-dir=%s", subnetConfigsPath),
-		fmt.Sprintf("--plugin-dir=%s", pluginsPath),
-		fmt.Sprintf("--vm-aliases-file=%s", vmAliasesConfig),
-		fmt.Sprintf("--chain-aliases-file=%s", chainAliasesConfig),
-		// fmt.Sprintf("--track-subnets=p4jUwqZsA2LuSftroCd3zb4ytH8W99oXKuKVZdsty7eQ3rXD6"),
+func exitIfRunning() {
+	if utils.FileExists(".pid") {
+		app.Log.Fatalf(".pid file exists, is another node already running? Delete .pid and try again.")
 	}
-	return avaBin, args
 }
 
-func runNodeAndWait(workDir string, cmd string, args []string) error {
+func runNodeAndWait(workDir string, cmd string) error {
 	for {
-		if err := runNode(workDir, cmd, args); err != nil {
+		if err := runNode(workDir, cmd); err != nil {
 			return err
 		}
 	}
 }
 
-// TODO This whole thing is wonky.
+// TODO This whole thing is wonky. Maybe do the job stuff in start.sh?
 // Goals:
 //   - Ability to start a node and wait for Ctl-C to (reliably) quit
 //   - Ability to have USR1 gracefully stop and restart the node
 //   - Listen for changes to vm files and gracefully stop and restart the node
 //   - Good UX and error reporting so user knows whats happening at all times
+//   - Use start.sh so user can see exactly how avalanchego is being started
 //
 // Issues:
 //   - If we have gocmd discard stdout, then if node fails to start we have nothing to show user
 //   - Maybe just tail main.log to show any errors if node doesnt start?
 //   - If we keep stdout, it eats major memory unless we have something that clears it out occassionally
 //   - Is it worth using gocmd? Is there something better? Roll our own?
-func runNode(workDir string, cmd string, args []string) error {
+func runNode(workDir string, cmd string) error {
 	var envCmd *gocmd.Cmd
 	var finalStatus gocmd.Status
 	var shouldRestart bool
 
 	if viper.GetBool("verbose") {
-		envCmd = gocmd.NewCmdOptions(gocmd.Options{Buffered: true}, cmd, args...)
+		envCmd = gocmd.NewCmdOptions(gocmd.Options{Buffered: true}, cmd)
 	} else {
-		envCmd = gocmd.NewCmdOptions(gocmd.Options{Buffered: false, Streaming: false}, cmd, args...)
+		envCmd = gocmd.NewCmdOptions(gocmd.Options{Buffered: false, Streaming: false}, cmd)
 	}
 
 	// Ctl-C wil stop the node
@@ -117,10 +102,11 @@ func runNode(workDir string, cmd string, args []string) error {
 	doneChan := envCmd.Done()
 
 	fmt.Printf("Avalanche node listening on http://0.0.0.0:%s\n", viper.GetString("port"))
-	fmt.Printf("(Send USR1 to PID %d to restart the node)\n\n", os.Getpid())
+	fmt.Printf("(Send USR1 to PID %d to restart the node)\n", os.Getpid())
+	fmt.Printf("(If you have problems you can always run '%s/start.sh' directly)\n\n", workDir)
 	// TODO dont show the below if they have already created a subnet
 	fmt.Printf("In another terminal, run this command to create a subnetEVM\n")
-	fmt.Printf("  ggt wallet create-chain MyNodeName MyChainName subnetevm\n")
+	fmt.Printf("  ggt wallet create-chain %s MyChainName subnetevm\n", workDir)
 
 	// TODO this doesnt quite work yet
 	if viper.GetBool("watch") {
@@ -173,7 +159,7 @@ func runNode(workDir string, cmd string, args []string) error {
 			os.Remove(".pid")
 			if shouldRestart {
 				fmt.Println("Restarting node...")
-				time.Sleep(time.Second * 3)
+				time.Sleep(time.Second * 5)
 				return nil
 			} else {
 				if finalStatus.Exit > 0 {
