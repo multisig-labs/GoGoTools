@@ -83,11 +83,11 @@ func runNode(workDir string, cmd string) error {
 	var finalStatus gocmd.Status
 	var shouldRestart bool
 
-	if viper.GetBool("verbose") {
-		envCmd = gocmd.NewCmdOptions(gocmd.Options{Buffered: true}, cmd)
-	} else {
-		envCmd = gocmd.NewCmdOptions(gocmd.Options{Buffered: false, Streaming: false}, cmd)
-	}
+	// if viper.GetBool("verbose") {
+	envCmd = gocmd.NewCmdOptions(gocmd.Options{}, cmd)
+	// } else {
+	// envCmd = gocmd.NewCmdOptions(gocmd.Options{Buffered: false, Streaming: false}, cmd)
+	// }
 
 	// Ctl-C wil stop the node
 	cSigTerm := make(chan os.Signal, 1)
@@ -98,15 +98,16 @@ func runNode(workDir string, cmd string) error {
 	signal.Notify(cSigUser1, syscall.SIGUSR1)
 
 	// Start the node
+	app.Log.Info("Starting node...")
 	statusChan := envCmd.Start()
 	doneChan := envCmd.Done()
 
-	fmt.Printf("Avalanche node listening on http://0.0.0.0:%s\n", viper.GetString("port"))
-	fmt.Printf("(Send USR1 to PID %d to restart the node)\n", os.Getpid())
-	fmt.Printf("(If you have problems you can always run '%s/start.sh' directly)\n\n", workDir)
+	app.Log.Infof("Avalanche node listening on http://0.0.0.0:9650")
+	app.Log.Infof("(Send USR1 to PID %d to restart the node)", os.Getpid())
+	app.Log.Infof("(If you have problems you can always run '%s/start.sh' directly)", workDir)
 	// TODO dont show the below if they have already created a subnet
-	fmt.Printf("In another terminal, run this command to create a subnetEVM\n")
-	fmt.Printf("  ggt wallet create-chain %s MyChainName subnetevm\n", workDir)
+	app.Log.Infof("In another terminal, run this command to create a subnetEVM")
+	app.Log.Infof("  ggt wallet create-chain %s MyChainName subnetevm", workDir)
 
 	// TODO this doesnt quite work yet
 	if viper.GetBool("watch") {
@@ -145,25 +146,36 @@ func runNode(workDir string, cmd string) error {
 
 	// Write a .pid so other commands can restart us with a USR1 if necessary
 	utils.WriteFileBytes(".pid", []byte(fmt.Sprintf("%d", os.Getpid())))
+	defer func() { os.Remove(".pid") }()
 
 	for {
 		select {
 		case <-cSigUser1:
 			shouldRestart = true
-			envCmd.Stop()
+			app.Log.Debug("Recvd SIGUSR1")
+			err := envCmd.Stop()
+			if err != nil {
+				app.Log.Errorf("error stopping node (USR1): %s", err)
+			}
 		case <-cSigTerm:
-			envCmd.Stop()
+			app.Log.Debug("Recvd SIGTERM")
+			err := envCmd.Stop()
+			if err != nil {
+				app.Log.Errorf("error stopping node (SIGTERM): %s", err)
+			}
 		case finalStatus = <-statusChan:
-			fmt.Println(strings.Join(finalStatus.Stdout, "\n"))
+			app.Log.Debug("Recvd statuschan")
+			app.Log.Info(strings.Join(finalStatus.Stdout, "\n"))
 		case <-doneChan:
-			os.Remove(".pid")
+			app.Log.Debug("Recvd donechan")
+			app.Log.Debugf("%+v", finalStatus)
 			if shouldRestart {
-				fmt.Println("Restarting node...")
+				app.Log.Info("Restarting node...")
 				time.Sleep(time.Second * 5)
 				return nil
 			} else {
 				if finalStatus.Exit > 0 {
-					fmt.Printf("program exited with code: %d (use --verbose flag for more info)", finalStatus.Exit)
+					app.Log.Infof("program exited with code: %d (check logs for more info)", finalStatus.Exit)
 				}
 				// Normal exit, but we have to return err so we break out of loop and dont restart
 				return fmt.Errorf("program exited")

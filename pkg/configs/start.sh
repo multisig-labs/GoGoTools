@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 pushd "${BASH_SOURCE%/*}"
-trap popd EXIT
 
 # This is the command that "ggt run <node>" uses
 #
@@ -23,6 +22,7 @@ cmd="bin/avalanchego \
   --api-admin-enabled=true \
   --log-rotater-max-files=1 \
   --log-rotater-max-size=1 \
+  --consensus-shutdown-timeout=1s \
 	--data-dir={{.DataDir}} \
 	--config-file={{.ConfigFile}} \
 	--chain-config-dir={{.ChainConfigDir}} \
@@ -31,8 +31,8 @@ cmd="bin/avalanchego \
 	--chain-aliases-file={{.ChainAliasesFile}}"
 
 if [[ -n "$VERBOSE" ]]; then
-  $cmd "$@"
+  exec $cmd "$@"
 else 
   echo "Node running with stdout suppressed..."
-  $cmd "$@" > /dev/null
+  exec $cmd "$@" > /dev/null
 fi
