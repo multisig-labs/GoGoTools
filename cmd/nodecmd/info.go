@@ -72,6 +72,21 @@ func getInfo() (*gjson.Result, error) {
 		return nil, err
 	}
 
+	stakingAssetIDs := `{}`
+	getSubnets.Get("result.subnets").ForEach(func(key, value gjson.Result) bool {
+		subnetID := value.Get("id").String()
+		stakingAsset, err := utils.FetchRPCGJSON(urlP, "platform.getStakingAssetID", fmt.Sprintf(`{"subnetID":"%s"}`, subnetID))
+		if err != nil {
+			app.Log.Infof("error retrieving stakingAssetID for subnetID: %s", subnetID)
+			return false
+		}
+		id := stakingAsset.Get("result.assetID").String()
+		if id != "" {
+			stakingAssetIDs, _ = sjson.Set(stakingAssetIDs, subnetID, id)
+		}
+		return true
+	})
+
 	aliases := `{"blockchainAliases":"AdminAPI disabled on node"}`
 	getBlockchains.Get("result.blockchains").ForEach(func(key, value gjson.Result) bool {
 		blockchainID := value.Get("id").String()
@@ -109,6 +124,7 @@ func getInfo() (*gjson.Result, error) {
 	out, _ = sjson.SetRaw(out, "getNodeVersion", getNodeVersion.Get("result").String())
 	out, _ = sjson.SetRaw(out, "getVMs", getVMs.Get("result").String())
 	out, _ = sjson.SetRaw(out, "subnets", getSubnets.Get("result.subnets").String())
+	out, _ = sjson.SetRaw(out, "stakingAssetIDs", stakingAssetIDs)
 	out, _ = sjson.SetRaw(out, "blockchains", getBlockchains.Get("result.blockchains").String())
 	out, _ = sjson.SetRaw(out, "aliases", aliases)
 	out, _ = sjson.SetRaw(out, "rpcs", rpcs)
