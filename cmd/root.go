@@ -30,11 +30,11 @@ func NewRootCmd() *cobra.Command {
 
 To get started, run these commands in an empty directory:
 
-  $ ggt utils init
+  $ ggt utils init v1.9.7 v0.4.8
   $ ggt node prepare MyNodeV1 \
-    --ava-bin=/full/path/to/avalanchego \
+    --ava-bin=avalanchego-v1.9.7 \
     --vm-name=subnetevm \
-    --vm-bin=/full/path/to/subnetevm
+    --vm-bin=subnet-evm-v0.4.8
   $ ggt node run MyNodeV1
   
   # Now in another terminal
