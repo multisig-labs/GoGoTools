@@ -28,11 +28,12 @@ cmd="bin/avalanchego \
 	--chain-config-dir={{.ChainConfigDir}} \
 	--plugin-dir={{.PluginDir}} \
 	--vm-aliases-file={{.VMAliasesFile}} \
+  --genesis={{.AvaGenesisFile}} \
 	--chain-aliases-file={{.ChainAliasesFile}}"
 
 if [[ -n "$VERBOSE" ]]; then
   exec $cmd "$@"
 else 
-  echo "Node running with stdout suppressed..."
+  echo "Node running with stdout suppressed. See logs in data/logs"
   exec $cmd "$@" > /dev/null
 fi

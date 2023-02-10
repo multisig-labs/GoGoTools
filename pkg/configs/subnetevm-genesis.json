@@ -1,6 +1,6 @@
 {
   "config": {
-    "chainId": 8675309,
+    "chainId": 1337,
     "allowFeeRecipients": false,
     "feeConfig": {
       "gasLimit": 8000000,
@@ -53,6 +53,9 @@
   "coinbase": "0x0000000000000000000000000000000000000000",
   "alloc": {
     "8db97c7cece249c2b98bdc0226cc4c2a57bf52fc": {
+      "balance": "0xd3c21bcecceda1000000"
+    },
+    "f39Fd6e51aad88F6F4ce6aB8827279cffFb92266": {
       "balance": "0xd3c21bcecceda1000000"
     }
   },

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	gocmd "github.com/go-cmd/cmd"
+	"github.com/multisig-labs/gogotools/pkg/configs"
 	"github.com/multisig-labs/gogotools/pkg/constants"
 	"github.com/multisig-labs/gogotools/pkg/utils"
 	"github.com/radovskyb/watcher"
@@ -41,7 +42,7 @@ func newRunCmd() *cobra.Command {
 				cobra.CheckErr(err)
 			}
 
-			startCmd := filepath.Join(workDir, constants.BashScriptFilename)
+			startCmd := filepath.Join(workDir, configs.BashScriptFilename)
 			runNodeAndWait(workDir, startCmd)
 		},
 	}
@@ -85,6 +86,7 @@ func runNode(workDir string, cmd string) error {
 
 	// if viper.GetBool("verbose") {
 	envCmd = gocmd.NewCmdOptions(gocmd.Options{}, cmd)
+	// envCmd.Env = append(envCmd.Env, "FOO=1")
 	// } else {
 	// envCmd = gocmd.NewCmdOptions(gocmd.Options{Buffered: false, Streaming: false}, cmd)
 	// }

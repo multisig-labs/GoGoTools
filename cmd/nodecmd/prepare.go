@@ -22,8 +22,9 @@ func newPrepareCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prepare work-dir",
 		Short: "Create a new self-contained directory in [work-dir] for a node",
-		Long:  ``,
-		Args:  cobra.ExactArgs(1),
+		Long: `TODO Notes: You are not allowed to replace genesis for 'local' network, 
+		so we use the ANR 'custom' genesis that can be freely tweaked.`,
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			viper.BindPFlags(cmd.Flags())
 			if viper.GetString("ava-bin") == "" {
@@ -67,8 +68,8 @@ func prepareWorkDir(workDir string, avaBin string, vmBin string, vmName string) 
 
 	bash, err := prepareBashScript(workDir)
 	cobra.CheckErr(err)
-	app.Log.Infof("Creating %s", filepath.Join(workDir, constants.BashScriptFilename))
-	err = ioutil.WriteFile(filepath.Join(workDir, constants.BashScriptFilename), []byte(bash), constants.DefaultPerms755)
+	app.Log.Infof("Creating %s", filepath.Join(workDir, configs.BashScriptFilename))
+	err = ioutil.WriteFile(filepath.Join(workDir, configs.BashScriptFilename), []byte(bash), constants.DefaultPerms755)
 	cobra.CheckErr(err)
 
 	app.Log.Infof("Linking %s to %s", avaBin, fileLocations.AvaBinFile)
@@ -77,14 +78,17 @@ func prepareWorkDir(workDir string, avaBin string, vmBin string, vmName string) 
 	}
 
 	// Copy configs from cur dir where `ggt init` put some defaults.
-	app.Log.Infof("Copying %s to %s", constants.NodeConfigFilename, fileLocations.ConfigFile)
-	err = utils.CopyFile(constants.NodeConfigFilename, fileLocations.ConfigFile)
+	app.Log.Infof("Copying %s to %s", configs.NodeConfigFilename, fileLocations.ConfigFile)
+	err = utils.CopyFile(configs.NodeConfigFilename, fileLocations.ConfigFile)
 	cobra.CheckErr(err)
-	app.Log.Infof("Copying %s to %s", constants.CChainConfigFilename, fileLocations.CChainConfigFile)
-	err = utils.CopyFile(constants.CChainConfigFilename, fileLocations.CChainConfigFile)
+	app.Log.Infof("Copying %s to %s", configs.CChainConfigFilename, fileLocations.CChainConfigFile)
+	err = utils.CopyFile(configs.CChainConfigFilename, fileLocations.CChainConfigFile)
 	cobra.CheckErr(err)
-	app.Log.Infof("Copying %s to %s", constants.XChainConfigFilename, fileLocations.XChainConfigFile)
-	err = utils.CopyFile(constants.XChainConfigFilename, fileLocations.XChainConfigFile)
+	app.Log.Infof("Copying %s to %s", configs.XChainConfigFilename, fileLocations.XChainConfigFile)
+	err = utils.CopyFile(configs.XChainConfigFilename, fileLocations.XChainConfigFile)
+	cobra.CheckErr(err)
+	app.Log.Infof("Copying %s to %s", configs.AvaGenesisFilename, fileLocations.AvaGenesisFile)
+	err = utils.CopyFile(configs.AvaGenesisFilename, fileLocations.AvaGenesisFile)
 	cobra.CheckErr(err)
 
 	// Always write a vm aliases file even if empty to make avalanchego happy

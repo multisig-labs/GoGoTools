@@ -27,5 +27,6 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 	cmd.AddCommand(newLogLevelCmd())
 	cmd.AddCommand(newPrepareCmd())
 	cmd.AddCommand(newRunCmd())
+	cmd.AddCommand(newResetCmd())
 	return cmd
 }

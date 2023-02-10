@@ -391,6 +391,7 @@ type FileLocations struct {
 	XChainConfigFile string
 	VMAliasesFile    string
 	ChainAliasesFile string
+	AvaGenesisFile   string
 }
 
 func NewDirectoryLayout(workDir string) DirectoryLayout {
@@ -410,6 +411,7 @@ func NewFileLocations(workDir string) FileLocations {
 	return FileLocations{
 		AvaBinFile:       filepath.Join(workDir, "bin", "avalanchego"),
 		ConfigFile:       filepath.Join(workDir, "configs", "node-config.json"),
+		AvaGenesisFile:   filepath.Join(workDir, "configs", "ava-genesis.json"),
 		ChainAliasesFile: filepath.Join(workDir, "configs", "chains", "aliases.json"),
 		CChainConfigFile: filepath.Join(workDir, "configs", "chains", "C", "config.json"),
 		XChainConfigFile: filepath.Join(workDir, "configs", "chains", "X", "config.json"),

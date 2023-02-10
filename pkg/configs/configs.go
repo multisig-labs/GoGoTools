@@ -4,6 +4,18 @@ import (
 	_ "embed"
 )
 
+const (
+	NodeConfigFilename   = "node-config.json"
+	CChainConfigFilename = "cchain-config.json"
+	XChainConfigFilename = "xchain-config.json"
+	AvaGenesisFilename   = "ava-genesis.json"
+	ChainConfigFilename  = "config.json"
+	AliasConfigFilename  = "aliases.json"
+	BashScriptFilename   = "start.sh"
+	AccountsFilename     = "accounts.json"
+	ContractsFilename    = "contracts.json"
+)
+
 //go:embed accounts.json
 var Accounts string
 
@@ -30,3 +42,6 @@ var Readme string
 
 //go:embed start.sh
 var StartBash string
+
+//go:embed ava-genesis.json
+var AvaGenesis string
