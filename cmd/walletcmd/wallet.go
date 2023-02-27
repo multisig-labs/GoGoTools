@@ -45,6 +45,7 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 
 	cmd.AddCommand(newCreateSubnetCmd())
 	cmd.AddCommand(newCreateChainCmd())
+	cmd.AddCommand(newAddValidatorCmd())
 
 	return cmd
 }
