@@ -10,7 +10,7 @@ import (
 	"syscall"
 
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto"
+	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/ava-labs/avalanchego/wallet/subnet/primary"
 	"github.com/multisig-labs/gogotools/pkg/utils"
@@ -130,7 +130,7 @@ func newCreateChainCmd() *cobra.Command {
 	return cmd
 }
 
-func createChain(key *crypto.PrivateKeySECP256K1R, subnetID ids.ID, name string, vmID ids.ID, genesisBytes []byte) (ids.ID, error) {
+func createChain(key *secp256k1.PrivateKey, subnetID ids.ID, name string, vmID ids.ID, genesisBytes []byte) (ids.ID, error) {
 	uri := viper.GetString("node-url")
 	kc := secp256k1fx.NewKeychain(key)
 	ctx := context.Background()

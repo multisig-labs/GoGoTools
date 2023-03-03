@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto"
+	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/utils/units"
-	"github.com/ava-labs/avalanchego/vms/platformvm/validator"
+	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/ava-labs/avalanchego/wallet/subnet/primary"
 	"github.com/multisig-labs/gogotools/pkg/utils"
@@ -39,7 +39,7 @@ func newAddValidatorCmd() *cobra.Command {
 	return cmd
 }
 
-func addValidator(key *crypto.PrivateKeySECP256K1R) (ids.ID, error) {
+func addValidator(key *secp256k1.PrivateKey) (ids.ID, error) {
 	uri := viper.GetString("node-url")
 	kc := secp256k1fx.NewKeychain(key)
 	subnetOwner := key.Address()
@@ -66,7 +66,7 @@ func addValidator(key *crypto.PrivateKeySECP256K1R) (ids.ID, error) {
 	startTime := time.Now().Add(10 * time.Second)
 	endTime := startTime.Add(24 * time.Hour)
 
-	vdr := validator.Validator{
+	vdr := txs.Validator{
 		NodeID: nodeShortID,
 		Start:  uint64(startTime.Unix()),
 		End:    uint64(endTime.Unix()),
