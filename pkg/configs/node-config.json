@@ -1,3 +1,5 @@
 {
-  "network-id": "network-1337"
+  "network-id": "network-1337",
+  "api-health-enabled": true,
+  "api-admin-enabled": true
 }

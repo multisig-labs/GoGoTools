@@ -113,15 +113,15 @@ func newCreateChainCmd() *cobra.Command {
 			// Chain config doesnt get picked up until a restart happens.
 			if exists := utils.FileExists(".pid"); !exists {
 				app.Log.Info("Can't find .pid file in current directory, unable to restart node. Stop and restart it to pick up changes.")
+			} else {
+				pidContents, err := os.ReadFile(".pid")
+				cobra.CheckErr(err)
+				pid, err := strconv.Atoi(strings.TrimSpace(string(pidContents)))
+				cobra.CheckErr(err)
+				err = syscall.Kill(pid, syscall.SIGUSR1)
+				cobra.CheckErr(err)
+				app.Log.Infof("Sent USR1 to pid %d to restart node", pid)
 			}
-			pidContents, err := os.ReadFile(".pid")
-			cobra.CheckErr(err)
-			pid, err := strconv.Atoi(strings.TrimSpace(string(pidContents)))
-			cobra.CheckErr(err)
-			err = syscall.Kill(pid, syscall.SIGUSR1)
-			cobra.CheckErr(err)
-			app.Log.Infof("Sent USR1 to pid %d to restart node", pid)
-
 			return nil
 		},
 	}

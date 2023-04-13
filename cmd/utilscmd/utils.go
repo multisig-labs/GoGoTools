@@ -31,6 +31,7 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 	cmd.AddCommand(newVMNameCmd())
 	cmd.AddCommand(newAddrVariantsCmd())
 	cmd.AddCommand(newMnemonicCmd())
+	cmd.AddCommand(newMnemonicKeysCmd())
 
 	return cmd
 }
