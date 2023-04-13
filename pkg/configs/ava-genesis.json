@@ -28,7 +28,7 @@
     },
     {
       "ethAddr": "0xb3d82b1367d362de99ab59a658165aff520cbd4d",
-      "avaxAddr": "X-custom1ur873jhz9qnaqv5qthk5sn3e8nj3e0kmzpjrhp",
+      "avaxAddr": "X-custom16045mxr3s2cjycqe2xfluk304xv3ezhkhsvkpr",
       "initialAmount": 10000000000000000,
       "unlockSchedule": [
         {
@@ -38,7 +38,7 @@
       ]
     }
   ],
-  "startTime": 1660536000,
+  "startTime": 1630987200,
   "initialStakeDuration": 31536000,
   "initialStakeDurationOffset": 5400,
   "initialStakedFunds": ["X-custom1g65uqn6t77p656w64023nh8nd9updzmxwd59gh"],
