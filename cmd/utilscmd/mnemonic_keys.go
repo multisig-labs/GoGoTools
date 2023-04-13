@@ -25,24 +25,37 @@ func newMnemonicKeysCmd() *cobra.Command {
 				hrp = args[1]
 			}
 
+			fmt.Println("=== C-Chain ===")
+
 			hdkeys, err := hd.DeriveHDKeys(args[0], hd.EthDerivationPath, 10)
 			if err != nil {
 				return fmt.Errorf("error deriving keys: %s", err)
 			}
 
-			fmt.Println("=== C-Chain ===")
 			for _, k := range hdkeys {
 				fmt.Printf("%s %s %s\n", k.EthAddr(), k.EthPrivKey(), k.Path)
 			}
+
+			fmt.Println("=== X-Chain ===")
 
 			hdkeys, err = hd.DeriveHDKeys(args[0], hd.AvaDerivationPath, 10)
 			if err != nil {
 				return fmt.Errorf("error deriving keys: %s", err)
 			}
 
-			fmt.Println("=== P-Chain ===")
 			for _, k := range hdkeys {
 				fmt.Printf("%s %s %s\n", k.AvaAddr("X", hrp), k.AvaPrivKey(), k.Path)
+			}
+
+			fmt.Println("=== P-Chain ===")
+
+			hdkeys, err = hd.DeriveHDKeys(args[0], hd.AvaDerivationPath, 10)
+			if err != nil {
+				return fmt.Errorf("error deriving keys: %s", err)
+			}
+
+			for _, k := range hdkeys {
+				fmt.Printf("%s %s %s\n", k.AvaAddr("P", hrp), k.AvaPrivKey(), k.Path)
 			}
 
 			return nil
