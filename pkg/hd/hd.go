@@ -81,22 +81,6 @@ func DeriveHDKeys(mnemonic string, path accounts.DerivationPath, numKeys int) ([
 	return hdkeys, nil
 }
 
-// func forEth(pk *ecdsa.PrivateKey) (privKeyHex string, addr string) {
-// 	pkb := ethcrypto.FromECDSA(pk)
-// 	privKeyHex = common.Bytes2Hex(pkb)
-// 	addr = ethcrypto.PubkeyToAddress(pk.PublicKey).String()
-// 	return
-// }
-
-// func forAva(pk *ecdsa.PrivateKey) (privKeyHex string, addr string) {
-// 	f := avacrypto.Factory{}
-// 	pkbytes := ethcrypto.FromECDSA(pk)
-// 	avapk, _ := f.ToPrivateKey(pkbytes)
-// 	privKeyHex = avapk.String()
-// 	addr, _ = address.Format("P", "avax", avapk.PublicKey().Address().Bytes())
-// 	return
-// }
-
 func derivePrivateKey(masterKey *hdkeychain.ExtendedKey, path accounts.DerivationPath) (*ecdsa.PrivateKey, error) {
 	var err error
 	key := masterKey
@@ -108,35 +92,6 @@ func derivePrivateKey(masterKey *hdkeychain.ExtendedKey, path accounts.Derivatio
 	}
 
 	privateKey, _ := key.ECPrivKey()
-	// publicKey, _ := key.ECPubKey()
 	privateKeyECDSA := privateKey.ToECDSA()
 	return privateKeyECDSA, nil
 }
-
-// pk, adr := forEth(privateKeyECDSA)
-// fmt.Printf("%s %s\n\n", adr, pk)
-
-// pk, adr = forAva(privateKeyECDSA)
-// fmt.Printf("%s %s\n\n", adr, pk)
-// publicKeyECDSA := publicKey.ToECDSA()
-
-// x := ethcrypto.FromECDSA(privateKeyECDSA)
-// fmt.Printf("pk: %x", x)
-// addr := ethcrypto.PubkeyToAddress(*publicKeyECDSA)
-// fmt.Printf("addr: %x", addr)
-
-// f := avacrypto.Factory{}
-
-// ethcrypto.FromECDSAPub(publicKeyECDSA)
-// pkbytes := ethcrypto.FromECDSA(privateKeyECDSA)
-
-// avapk, err := f.ToPrivateKey(pkbytes)
-// if err != nil {
-// 	fmt.Printf("err %s", err)
-// }
-// fmt.Printf("avapk %x", avapk)
-// a, err := address.Format("P", "avax", avapk.PublicKey().Address().Bytes())
-// if err != nil {
-// 	fmt.Printf("err %s", err)
-// }
-// fmt.Printf("a %s", a)
