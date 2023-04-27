@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
-	"syscall"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
@@ -111,17 +108,18 @@ func newCreateChainCmd() *cobra.Command {
 			app.Log.Info("run 'gtt node info' to see more")
 
 			// Chain config doesnt get picked up until a restart happens.
-			if exists := utils.FileExists(".pid"); !exists {
-				app.Log.Info("Can't find .pid file in current directory, unable to restart node. Stop and restart it to pick up changes.")
-			} else {
-				pidContents, err := os.ReadFile(".pid")
-				cobra.CheckErr(err)
-				pid, err := strconv.Atoi(strings.TrimSpace(string(pidContents)))
-				cobra.CheckErr(err)
-				err = syscall.Kill(pid, syscall.SIGUSR1)
-				cobra.CheckErr(err)
-				app.Log.Infof("Sent USR1 to pid %d to restart node", pid)
-			}
+			// Update: Not sure this is true
+			// if exists := utils.FileExists(".pid"); !exists {
+			// 	app.Log.Info("Can't find .pid file in current directory, unable to restart node. Stop and restart it to pick up changes.")
+			// } else {
+			// 	pidContents, err := os.ReadFile(".pid")
+			// 	cobra.CheckErr(err)
+			// 	pid, err := strconv.Atoi(strings.TrimSpace(string(pidContents)))
+			// 	cobra.CheckErr(err)
+			// 	err = syscall.Kill(pid, syscall.SIGUSR1)
+			// 	cobra.CheckErr(err)
+			// 	app.Log.Infof("Sent USR1 to pid %d to restart node", pid)
+			// }
 			return nil
 		},
 	}

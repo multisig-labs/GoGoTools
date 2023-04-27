@@ -2,6 +2,11 @@ package configs
 
 import (
 	_ "embed"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"log"
+	"time"
 )
 
 const (
@@ -44,4 +49,56 @@ var Readme string
 var StartBash string
 
 //go:embed ava-genesis.json
+var AvaGenesisRaw []byte
+
+// We need to munge the timestamps from the raw file
 var AvaGenesis string
+
+func init() {
+	// difference between unlock schedule locktime and startime in original genesis
+	const genesisLocktimeStartimeDelta = 2836800
+
+	var (
+		genesisMap map[string]interface{}
+		err        error
+	)
+
+	if err = json.Unmarshal(AvaGenesisRaw, &genesisMap); err != nil {
+		log.Fatalf("error reading ava-genesis.json %s", err)
+	}
+
+	startTime := time.Now().Unix()
+	lockTime := startTime + genesisLocktimeStartimeDelta
+	genesisMap["startTime"] = float64(startTime)
+	allocations, ok := genesisMap["allocations"].([]interface{})
+	if !ok {
+		panic(errors.New("could not get allocations in genesis"))
+	}
+	for _, allocIntf := range allocations {
+		alloc, ok := allocIntf.(map[string]interface{})
+		if !ok {
+			panic(fmt.Errorf("unexpected type for allocation in genesis. got %T", allocIntf))
+		}
+		unlockSchedule, ok := alloc["unlockSchedule"].([]interface{})
+		if !ok {
+			panic(errors.New("could not get unlockSchedule in allocation"))
+		}
+		for _, schedIntf := range unlockSchedule {
+			sched, ok := schedIntf.(map[string]interface{})
+			if !ok {
+				panic(fmt.Errorf("unexpected type for unlockSchedule elem in genesis. got %T", schedIntf))
+			}
+			if _, ok := sched["locktime"]; ok {
+				sched["locktime"] = float64(lockTime)
+			}
+		}
+	}
+
+	// now we can marshal the *whole* thing into bytes
+	updatedGenesis, err := json.Marshal(genesisMap)
+	if err != nil {
+		panic(err)
+	}
+
+	AvaGenesis = string(updatedGenesis)
+}
