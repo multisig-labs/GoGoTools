@@ -39,6 +39,7 @@ Example:  ggt init v1.9.7 v0.4.8
 			}
 
 			if len(args) > 0 && args[0] != "" {
+				app.Log.Infof("Downloading avalanchego...")
 				url, destFile, err := utils.DownloadAvalanchego(".", args[0])
 				if err != nil {
 					app.Log.Warnf("Error downloading %s: %s", url, err)
@@ -48,6 +49,7 @@ Example:  ggt init v1.9.7 v0.4.8
 			}
 
 			if len(args) > 1 && args[1] != "" {
+				app.Log.Infof("Downloading subnetevm...")
 				url, destFile, err := utils.DownloadSubnetevm(".", args[1])
 				if err != nil {
 					app.Log.Warnf("Error downloading %s: %s", url, err)
