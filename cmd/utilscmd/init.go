@@ -34,7 +34,7 @@ Example:  ggt init v1.9.7 v0.4.8
 					app.Log.Infof("File exists, skipping %s", fn)
 				} else {
 					app.Log.Infof("Creating %s", fn)
-					utils.WriteFileBytes(fn, []byte(content))
+					_ = utils.WriteFileBytes(fn, []byte(content))
 				}
 			}
 

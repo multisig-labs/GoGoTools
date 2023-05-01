@@ -34,6 +34,6 @@ func createUser(username string, password string, pk string) error {
 		Password: password,
 	}
 
-	c := keystore.NewClient(uri)
+	c := keystore.NewClient(uri) //nolint:all
 	return c.CreateUser(ctx, up)
 }

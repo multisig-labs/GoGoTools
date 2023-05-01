@@ -51,7 +51,7 @@ func newCreateChainCmd() *cobra.Command {
 				}
 			}
 
-			viper.BindPFlags(cmd.Flags())
+			_ = viper.BindPFlags(cmd.Flags())
 
 			key, err := decodePrivateKey(viper.GetString("pk"))
 			cobra.CheckErr(err)
@@ -97,7 +97,7 @@ func newCreateChainCmd() *cobra.Command {
 				app.Log.Warnf("Chain alias not created, unable to parse %s", fileLocations.ChainAliasesFile)
 			} else {
 				aliasesJson, _ = sjson.Set(aliasesJson, txID.String(), []string{name})
-				utils.WriteFileBytes(fileLocations.ChainAliasesFile, []byte(aliasesJson))
+				_ = utils.WriteFileBytes(fileLocations.ChainAliasesFile, []byte(aliasesJson))
 			}
 
 			app.Log.Infof("created new blockchain %s with ID: %s", name, txID)

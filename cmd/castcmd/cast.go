@@ -8,10 +8,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-var app *application.GoGoTools
+// var app *application.GoGoTools
 
 func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
-	app = injectedApp
+	// app = injectedApp
 
 	cmd := &cobra.Command{
 		Use:   "cast",
@@ -30,10 +30,10 @@ to make it a bit more ergonomic to issue cast commands to your node.
 	}
 
 	cmd.PersistentFlags().String("accounts", "accounts.json", "JSON of actors")
-	viper.BindPFlag("accounts", cmd.PersistentFlags().Lookup("accounts"))
+	_ = viper.BindPFlag("accounts", cmd.PersistentFlags().Lookup("accounts"))
 
 	cmd.PersistentFlags().String("contracts", "contracts.json", "JSON of contract addresses")
-	viper.BindPFlag("contracts", cmd.PersistentFlags().Lookup("contracts"))
+	_ = viper.BindPFlag("contracts", cmd.PersistentFlags().Lookup("contracts"))
 
 	cmd.AddCommand(newBalancesCmd())
 	cmd.AddCommand(newCallCmd())

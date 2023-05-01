@@ -22,7 +22,7 @@ func newExplorerCmd() *cobra.Command {
 			}
 			url := fmt.Sprintf("http://expedition.fly.dev?rpcUrl=%s", rpc)
 			app.Log.Infof("Opening %s", url)
-			browser.OpenURL(url)
+			_ = browser.OpenURL(url)
 		},
 	}
 	return cmd

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -26,7 +25,7 @@ func newPrepareCmd() *cobra.Command {
 		so we use the ANR 'custom' genesis that can be freely tweaked.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			viper.BindPFlags(cmd.Flags())
+			_ = viper.BindPFlags(cmd.Flags())
 			if viper.GetString("ava-bin") == "" {
 				return fmt.Errorf("must supply --ava-bin flag or AVA_BIN env")
 			}
@@ -69,7 +68,7 @@ func prepareWorkDir(workDir string, avaBin string, vmBin string, vmName string) 
 	bash, err := prepareBashScript(workDir)
 	cobra.CheckErr(err)
 	app.Log.Infof("Creating %s", filepath.Join(workDir, configs.BashScriptFilename))
-	err = ioutil.WriteFile(filepath.Join(workDir, configs.BashScriptFilename), []byte(bash), constants.DefaultPerms755)
+	err = os.WriteFile(filepath.Join(workDir, configs.BashScriptFilename), []byte(bash), constants.DefaultPerms755)
 	cobra.CheckErr(err)
 
 	app.Log.Infof("Linking %s to %s", avaBin, fileLocations.AvaBinFile)
@@ -111,11 +110,11 @@ func prepareWorkDir(workDir string, avaBin string, vmBin string, vmName string) 
 		vmAliases, _ = sjson.Set("{}", vmID.String(), []string{vmName})
 	}
 	app.Log.Infof("Creating %s", fileLocations.VMAliasesFile)
-	err = ioutil.WriteFile(fileLocations.VMAliasesFile, []byte(vmAliases), 0644)
+	err = os.WriteFile(fileLocations.VMAliasesFile, []byte(vmAliases), 0644)
 	cobra.CheckErr(err)
 
 	app.Log.Infof("Creating %s", fileLocations.ChainAliasesFile)
-	err = ioutil.WriteFile(fileLocations.ChainAliasesFile, []byte("{}"), 0644)
+	err = os.WriteFile(fileLocations.ChainAliasesFile, []byte("{}"), 0644)
 	cobra.CheckErr(err)
 
 	return err

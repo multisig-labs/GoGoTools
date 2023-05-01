@@ -26,7 +26,7 @@ func newRunCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			workDir := args[0]
-			viper.BindPFlags(cmd.Flags())
+			_ = viper.BindPFlags(cmd.Flags())
 
 			exitIfRunning()
 
@@ -43,7 +43,7 @@ func newRunCmd() *cobra.Command {
 			}
 
 			startCmd := filepath.Join(workDir, configs.BashScriptFilename)
-			runNodeAndWait(workDir, startCmd)
+			_ = runNodeAndWait(workDir, startCmd)
 		},
 	}
 	cmd.Flags().Bool("clear-logs", false, "Delete logs/* before starting node")
@@ -147,7 +147,7 @@ func runNode(workDir string, cmd string) error {
 	}
 
 	// Write a .pid so other commands can restart us with a USR1 if necessary
-	utils.WriteFileBytes(".pid", []byte(fmt.Sprintf("%d", os.Getpid())))
+	_ = utils.WriteFileBytes(".pid", []byte(fmt.Sprintf("%d", os.Getpid())))
 	defer func() { os.Remove(".pid") }()
 
 	for {

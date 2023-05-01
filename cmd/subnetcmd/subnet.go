@@ -7,10 +7,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var app *application.GoGoTools
+// var app *application.GoGoTools
 
 func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
-	app = injectedApp
+	// app = injectedApp
 
 	cmd := &cobra.Command{
 		Use:    "subnet",
