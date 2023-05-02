@@ -54,8 +54,8 @@ jobs:
         env:
           GOOS: linux
           GOARCH: arm64
-          CC: aarch64-linux-gnu-gcc
-          CXX: aarch64-linux-gnu-g++
+          CC: /usr/bin/aarch64-linux-gnu-gcc
+          CXX: /usr/bin/aarch64-linux-gnu-g++
           CGO_ENABLED: 1
         run: go build -o output/ggt-${{ env.GOOS }}-${{ env.GOARCH }} main.go
 
@@ -63,8 +63,8 @@ jobs:
         env:
           GOOS: darwin
           GOARCH: amd64
-          CC: x86_64-apple-darwin20.2-clang
-          CXX: x86_64-apple-darwin20.2-clang++
+          CC: /usr/bin/x86_64-apple-darwin20.2-clang
+          CXX: /usr/bin/x86_64-apple-darwin20.2-clang++
           CGO_ENABLED: 1
         run: go build -o output/ggt-${{ env.GOOS }}-${{ env.GOARCH }} main.go
 
@@ -72,8 +72,8 @@ jobs:
         env:
           GOOS: darwin
           GOARCH: arm64
-          CC: arm64-apple-darwin20.2-clang
-          CXX: arm64-apple-darwin20.2-clang++
+          CC: /usr/bin/arm64-apple-darwin20.2-clang
+          CXX: /usr/bin/arm64-apple-darwin20.2-clang++
           CGO_ENABLED: 1
         run: go build -o output/ggt-${{ env.GOOS }}-${{ env.GOARCH }} main.go
 
