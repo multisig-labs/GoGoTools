@@ -13,3 +13,6 @@ default:
 
 build:
 	CGO_ENABLED=1 go build -ldflags "{{LDFLAGS}}" -o bin/ggt main.go
+
+install: build
+  mv bin/ggt $GOPATH/bin/ggt
