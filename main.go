@@ -5,11 +5,14 @@ import (
 	"os"
 	"runtime/debug"
 
+	"github.com/ava-labs/avalanchego/config"
 	"github.com/multisig-labs/gogotools/cmd"
 	"github.com/multisig-labs/gogotools/pkg/version"
 )
 
 func main() {
+	// Doing this to get github.com/Microsoft/go-winio to get imported :shrug:
+	_ = config.AvalancheGoDataDirVar
 	defer panicHandler()
 	cmd.Execute()
 }
