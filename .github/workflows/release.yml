@@ -1,84 +1,27 @@
-name: Crossbuild Go Binary
+name: build
 
 on:
   push:
-    branches:
-      - main
-    tags:
-      - "*"
   pull_request:
-    branches:
-      - main
 
 jobs:
-  build:
+  xgo:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Go
-        uses: actions/setup-go@v2
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build
+        uses: crazy-max/ghaction-xgo@v2
         with:
-          go-version: 1.20.x
-
-      - name: Install cross-compilation dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y g++-aarch64-linux-gnu
-          sudo apt-get install -y gcc-aarch64-linux-gnu=4:11.2.0-1ubuntu1
-          sudo apt-get install -y gcc-multilib=4:11.2.0-1ubuntu1
-          sudo apt-get install -y gcc-mingw-w64
-
-      - name: Cache Go modules
-        uses: actions/cache@v2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Make output directory
-        run: mkdir -p output
-
-      - name: Build for Linux amd64
-        env:
-          GOOS: linux
-          GOARCH: amd64
-          CC: gcc
-          CXX: g++
-          CGO_ENABLED: 1
-        run: go build -o output/ggt-${{ env.GOOS }}-${{ env.GOARCH }} main.go
-
-      - name: Build for Linux arm64
-        env:
-          GOOS: linux
-          GOARCH: arm64
-          CC: /usr/bin/aarch64-linux-gnu-gcc
-          CXX: /usr/bin/aarch64-linux-gnu-g++
-          CGO_ENABLED: 1
-        run: go build -o output/ggt-${{ env.GOOS }}-${{ env.GOARCH }} main.go
-
-      - name: Build for MacOS amd64
-        env:
-          GOOS: darwin
-          GOARCH: amd64
-          CC: /usr/bin/x86_64-apple-darwin20.2-clang
-          CXX: /usr/bin/x86_64-apple-darwin20.2-clang++
-          CGO_ENABLED: 1
-        run: go build -o output/ggt-${{ env.GOOS }}-${{ env.GOARCH }} main.go
-
-      - name: Build for MacOS arm64
-        env:
-          GOOS: darwin
-          GOARCH: arm64
-          CC: /usr/bin/arm64-apple-darwin20.2-clang
-          CXX: /usr/bin/arm64-apple-darwin20.2-clang++
-          CGO_ENABLED: 1
-        run: go build -o output/ggt-${{ env.GOOS }}-${{ env.GOARCH }} main.go
-
-      - name: Archive build artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: binaries
-          path: output/
+          xgo_version: latest
+          go_version: 1.20
+          dest: build
+          prefix: ggt
+          targets: linux/amd64,linux/arm64,darwin/amd64,darwin/arm64
+          v: true
+          x: false
+          race: false
+          ldflags: -s -w
+          buildmode: default
+          trimpath: true
+          pkg: main.go
