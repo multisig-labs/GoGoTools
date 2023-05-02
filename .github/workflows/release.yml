@@ -22,11 +22,6 @@ jobs:
         with:
           go-version: 1.20.x
 
-      # - name: Install cross-compilation dependencies
-      #   run: |
-      #     sudo apt-get update
-      #     sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu gcc-multilib gcc-mingw-w64
-
       - name: Cache Go modules
         uses: actions/cache@v2
         with:
@@ -35,6 +30,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
+      - name: Make output directory
+        run: mkdir -p output
+
       - name: Build for Linux amd64
         env:
           GOOS: linux
@@ -42,7 +40,7 @@ jobs:
           CC: gcc
           CXX: g++
           CGO_ENABLED: 1
-        run: go build -o output/${{ env.GOOS }}-${{ env.GOARCH }} ./...
+        run: go build -o output/ggt-${{ env.GOOS }}-${{ env.GOARCH }} main.go
 
       - name: Build for Linux arm64
         env:
@@ -51,7 +49,7 @@ jobs:
           CC: aarch64-linux-gnu-gcc
           CXX: aarch64-linux-gnu-g++
           CGO_ENABLED: 1
-        run: go build -o output/${{ env.GOOS }}-${{ env.GOARCH }} ./...
+        run: go build -o output/ggt-${{ env.GOOS }}-${{ env.GOARCH }} main.go
 
       - name: Build for MacOS amd64
         env:
@@ -60,7 +58,7 @@ jobs:
           CC: x86_64-apple-darwin20.2-clang
           CXX: x86_64-apple-darwin20.2-clang++
           CGO_ENABLED: 1
-        run: go build -o output/${{ env.GOOS }}-${{ env.GOARCH }} ./...
+        run: go build -o output/ggt-${{ env.GOOS }}-${{ env.GOARCH }} main.go
 
       - name: Build for MacOS arm64
         env:
@@ -69,7 +67,7 @@ jobs:
           CC: arm64-apple-darwin20.2-clang
           CXX: arm64-apple-darwin20.2-clang++
           CGO_ENABLED: 1
-        run: go build -o output/${{ env.GOOS }}-${{ env.GOARCH }} ./...
+        run: go build -o output/ggt-${{ env.GOOS }}-${{ env.GOARCH }} main.go
 
       - name: Archive build artifacts
         uses: actions/upload-artifact@v2
