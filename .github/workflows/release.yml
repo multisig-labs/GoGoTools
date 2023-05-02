@@ -1,4 +1,4 @@
-name: Release (with lint and test)
+name: Release
 
 on:
   push:
