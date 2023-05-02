@@ -7,6 +7,10 @@ on:
 jobs:
   xgo:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [linux, darwin]
+        arch: [amd64, arm64]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -17,7 +21,7 @@ jobs:
           go_version: "1.20"
           dest: build
           prefix: ggt
-          targets: linux/amd64,linux/arm64,darwin/amd64,darwin/arm64
+          targets: ${{ matrix.os }}/${{ matrix.arch }}
           v: true
           x: false
           race: false
@@ -29,4 +33,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: build-artifacts
-          path: build/
+          path: build/ggt-${{ matrix.os }}-${{ matrix.arch }}*
