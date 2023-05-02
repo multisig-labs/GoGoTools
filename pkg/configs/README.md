@@ -18,13 +18,11 @@ Some example of the kinds of commands you might run during a dev workflow.
 
 ```sh
 ggt utils init
-ggt init v1.9.7 v0.4.8  # This will download avalanchego and subnet-evm from GitHub
+ggt init v1.10.1 v0.5.1  # This will download avalanchego and subnet-evm from GitHub Releases
 # Prepare a node with just avalanchego and no custom VMs
-ggt node prepare NodeV1 --ava-bin=$GOPATH/src/github.com/ava-labs/avalanchego/build/avalanchego
+ggt node prepare NodeV1 --ava-bin=avalanchego-v1.10.1 --vm-name=subnetevm --vm-bin=subnet-evm-v0.5.1
 # Prepare a node with avalanchego and a custom VM
-ggt node prepare NodeV1 --ava-bin=$GOPATH/src/github.com/ava-labs/avalanchego/build/avalanchego --vm-name=subnetevm --vm-bin=$GOPATH/src/github.com/ava-labs/avalanchego/build/plugins/srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy
-
-rm -rf NodeV1 # Remove a node directory
+ggt node prepare NodeV1 --ava-bin=avalanchego-v1.10.1 --vm-name=subnetevm --vm-bin=$GOPATH/src/github.com/ava-labs/avalanchego/build/plugins/srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy
 
 ggt node run NodeV1 --clear-logs
 
@@ -33,6 +31,9 @@ ggt wallet create-chain NodeV1 MyChain subnetevm
 ggt node info | jq
 ggt node health | jq
 ggt node explorer MyChain
+
+# Delete node's data directory
+ggt node reset NodeV1
 
 export ETH_RPC_URL=`ggt node info | jq -r '.rpcs.MyChain'`
 echo $ETH_RPC_URL
