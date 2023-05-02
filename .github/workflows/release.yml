@@ -2,8 +2,8 @@ name: build
 
 on:
   push:
-  pull_request:
-
+    tags:
+      - "*"
 jobs:
   xgo:
     runs-on: ubuntu-latest
