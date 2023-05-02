@@ -1,29 +1,78 @@
-name: Release
+name: Crossbuild Go Binary
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "*"
+  pull_request:
     branches:
       - main
 
 jobs:
-  releases-matrix:
-    name: Release Go Binary
+  build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        # build and publish in parallel: linux/amd64
-        goos: [linux, darwin]
-        goarch: [amd64, arm64]
     steps:
-      - uses: actions/checkout@v3
-      - run: go mod download
-      - uses: wangyoucao577/go-release-action@v1.16
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          goos: ${{ matrix.goos }}
-          goarch: ${{ matrix.goarch }}
-          binary_name: "ggt"
-          ldflags: "-s -w"
-          extra_files: LICENSE Readme.md
+          go-version: 1.20.x
+
+      - name: Install cross-compilation dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu gcc-multilib gcc-mingw-w64
+
+      - name: Cache Go modules
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Build for Linux amd64
+        env:
+          GOOS: linux
+          GOARCH: amd64
+          CC: gcc
+          CXX: g++
+          CGO_ENABLED: 1
+        run: go build -o output/${{ env.GOOS }}-${{ env.GOARCH }} ./...
+
+      - name: Build for Linux arm64
+        env:
+          GOOS: linux
+          GOARCH: arm64
+          CC: aarch64-linux-gnu-gcc
+          CXX: aarch64-linux-gnu-g++
+          CGO_ENABLED: 1
+        run: go build -o output/${{ env.GOOS }}-${{ env.GOARCH }} ./...
+
+      - name: Build for MacOS amd64
+        env:
+          GOOS: darwin
+          GOARCH: amd64
+          CC: x86_64-apple-darwin20.2-clang
+          CXX: x86_64-apple-darwin20.2-clang++
+          CGO_ENABLED: 1
+        run: go build -o output/${{ env.GOOS }}-${{ env.GOARCH }} ./...
+
+      - name: Build for MacOS arm64
+        env:
+          GOOS: darwin
+          GOARCH: arm64
+          CC: arm64-apple-darwin20.2-clang
+          CXX: arm64-apple-darwin20.2-clang++
+          CGO_ENABLED: 1
+        run: go build -o output/${{ env.GOOS }}-${{ env.GOARCH }} ./...
+
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: binaries
+          path: output/
