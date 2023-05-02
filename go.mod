@@ -24,7 +24,7 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.0.0 // indirect
 	cloud.google.com/go/storage v1.30.1 // indirect
-	github.com/DataDog/zstd v1.5.5 // indirect
+	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/aws/aws-sdk-go v1.44.254 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.2 // indirect
