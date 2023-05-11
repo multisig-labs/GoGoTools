@@ -32,6 +32,7 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 	cmd.AddCommand(newAddrVariantsCmd())
 	cmd.AddCommand(newMnemonicCmd())
 	cmd.AddCommand(newMnemonicKeysCmd())
+	cmd.AddCommand(newMnemonicAddrsCmd())
 	cmd.AddCommand(newPortFwdCmd())
 
 	return cmd

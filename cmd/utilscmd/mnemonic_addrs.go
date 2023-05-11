@@ -9,10 +9,10 @@ import (
 	"github.com/tyler-smith/go-bip39"
 )
 
-func newMnemonicKeysCmd() *cobra.Command {
+func newMnemonicAddrsCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "mnemonic-keys [mnemonic] [hrp]",
-		Short: "Show keys and addresses for a BIP39 mnemonic",
+		Use:   "mnemonic-addrs [mnemonic] [hrp]",
+		Short: "Show public addresses for a BIP39 mnemonic",
 		Long:  ``,
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -25,7 +25,7 @@ func newMnemonicKeysCmd() *cobra.Command {
 				hrp = args[1]
 			}
 
-			fmt.Println("=== C-Chain ===")
+			fmt.Printf("=== C-Chain [%s] ===\n", hrp)
 
 			hdkeys, err := hd.DeriveHDKeys(args[0], hd.EthDerivationPath, 10)
 			if err != nil {
@@ -33,7 +33,7 @@ func newMnemonicKeysCmd() *cobra.Command {
 			}
 
 			for _, k := range hdkeys {
-				fmt.Printf("%s %s %s\n", k.EthAddr(), k.EthPrivKey(), k.Path)
+				fmt.Printf("%s %s\n", k.EthAddr(), k.Path)
 			}
 
 			fmt.Printf("=== X-Chain [%s] ===\n", hrp)
@@ -44,7 +44,7 @@ func newMnemonicKeysCmd() *cobra.Command {
 			}
 
 			for _, k := range hdkeys {
-				fmt.Printf("%s %s %s\n", k.AvaAddr("X", hrp), k.AvaPrivKey(), k.Path)
+				fmt.Printf("%s %s\n", k.AvaAddr("X", hrp), k.Path)
 			}
 
 			fmt.Printf("=== P-Chain [%s] ===\n", hrp)
@@ -55,7 +55,7 @@ func newMnemonicKeysCmd() *cobra.Command {
 			}
 
 			for _, k := range hdkeys {
-				fmt.Printf("%s %s %s\n", k.AvaAddr("P", hrp), k.AvaPrivKey(), k.Path)
+				fmt.Printf("%s %s\n", k.AvaAddr("P", hrp), k.Path)
 			}
 
 			return nil
