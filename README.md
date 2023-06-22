@@ -10,7 +10,7 @@ GGT currently lets you quickly spin up a subnet dev environment that has avalanc
 
 ## Installation
 
-Requires [Go](https://golang.org/doc/install) version >= 1.19
+Requires [Go](https://golang.org/doc/install) version >= 1.20
 
 Clone Repository
 
