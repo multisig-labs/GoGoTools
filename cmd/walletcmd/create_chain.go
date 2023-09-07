@@ -105,7 +105,7 @@ func newCreateChainCmd() *cobra.Command {
 			app.Log.Info("")
 			app.Log.Infof("RPC: %s/ext/bc/%s/rpc\n", primary.LocalAPIURI, txID)
 			app.Log.Info("")
-			app.Log.Info("run 'gtt node info' to see more")
+			app.Log.Info("run 'ggt node info' to see more")
 
 			// Chain config doesnt get picked up until a restart happens.
 			// Update: Not sure this is true
