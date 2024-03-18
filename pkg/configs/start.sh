@@ -14,9 +14,7 @@ cmd="bin/avalanchego \
 	--public-ip=127.0.0.1 \
 	--bootstrap-ids= \
 	--bootstrap-ips= \
-	--staking-enabled=false \
-	--staking-ephemeral-cert-enabled=true \
-  --staking-ephemeral-signer-enabled=true \
+	--sybil-protection-enabled=false \
   --index-enabled=true \
   --api-keystore-enabled=true \
   --api-admin-enabled=true \
@@ -28,7 +26,7 @@ cmd="bin/avalanchego \
 	--chain-config-dir={{.ChainConfigDir}} \
 	--plugin-dir={{.PluginDir}} \
 	--vm-aliases-file={{.VMAliasesFile}} \
-  --genesis={{.AvaGenesisFile}} \
+  --genesis-file={{.AvaGenesisFile}} \
 	--chain-aliases-file={{.ChainAliasesFile}}"
 
 if [[ -n "$VERBOSE" ]]; then

@@ -8,6 +8,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
+	"github.com/ava-labs/avalanchego/utils/set"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/ava-labs/avalanchego/wallet/subnet/primary"
 	"github.com/multisig-labs/gogotools/pkg/utils"
@@ -34,10 +35,6 @@ func newCreateChainCmd() *cobra.Command {
 			if len(args) > 3 {
 				subnetID, err = ids.FromString(args[3])
 				cobra.CheckErr(err)
-			}
-
-			if exists := utils.DirExists(workDir); !exists {
-				return fmt.Errorf("node directory does not exist: %s", workDir)
 			}
 
 			// Dont allow duplicate chain names, for simplicity
@@ -133,12 +130,17 @@ func createChain(key *secp256k1.PrivateKey, subnetID ids.ID, name string, vmID i
 	kc := secp256k1fx.NewKeychain(key)
 	ctx := context.Background()
 
-	wallet, err := primary.NewWalletWithTxs(ctx, uri, kc, subnetID)
+	wallet, err := primary.MakeWallet(ctx, &primary.WalletConfig{
+		URI:              uri,
+		AVAXKeychain:     kc,
+		EthKeychain:      kc,
+		PChainTxsToFetch: set.Of(subnetID),
+	})
 	if err != nil {
 		return ids.Empty, fmt.Errorf("failed to initialize wallet: %w", err)
 	}
 
-	createChainTxID, err := wallet.P().IssueCreateChainTx(
+	createChainTx, err := wallet.P().IssueCreateChainTx(
 		subnetID,
 		genesisBytes,
 		vmID,
@@ -149,5 +151,5 @@ func createChain(key *secp256k1.PrivateKey, subnetID ids.ID, name string, vmID i
 		return ids.Empty, fmt.Errorf("failed to issue CreateBlockchainTx: %w", err)
 	}
 
-	return createChainTxID, nil
+	return createChainTx.TxID, nil
 }

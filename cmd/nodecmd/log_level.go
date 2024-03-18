@@ -30,7 +30,8 @@ func setLoggerLevel(level string, chainName string) error {
 
 	if chainName == "X" || chainName == "P" {
 		c := admin.NewClient(uri)
-		return c.SetLoggerLevel(ctx, chainName, level, level)
+		_, err := c.SetLoggerLevel(ctx, chainName, level, level)
+		return err
 	}
 
 	lvl, err := ethlog.LvlFromString(level)

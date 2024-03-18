@@ -27,9 +27,8 @@ func (h HDKey) EthAddr() string {
 }
 
 func (h HDKey) AvaAddr(chain string, hrp string) string {
-	f := avacrypto.Factory{}
 	pkbytes := ethcrypto.FromECDSA(h.PK)
-	avapk, _ := f.ToPrivateKey(pkbytes)
+	avapk, _ := avacrypto.ToPrivateKey(pkbytes)
 	addr, _ := address.Format(chain, hrp, avapk.PublicKey().Address().Bytes())
 	return addr
 }
@@ -40,9 +39,8 @@ func (h HDKey) EthPrivKey() string {
 }
 
 func (h HDKey) AvaPrivKey() string {
-	f := avacrypto.Factory{}
 	pkbytes := ethcrypto.FromECDSA(h.PK)
-	avapk, _ := f.ToPrivateKey(pkbytes)
+	avapk, _ := avacrypto.ToPrivateKey(pkbytes)
 	return avapk.String()
 }
 

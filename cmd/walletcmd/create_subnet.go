@@ -8,7 +8,6 @@ import (
 	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/ava-labs/avalanchego/wallet/subnet/primary"
-	"github.com/multisig-labs/gogotools/pkg/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -20,9 +19,9 @@ func newCreateSubnetCmd() *cobra.Command {
 		Long:  ``,
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if exists := utils.DirExists(args[0]); !exists {
-				return fmt.Errorf("node directory does not exist: %s", args[0])
-			}
+			// if exists := utils.DirExists(args[0]); !exists {
+			// 	return fmt.Errorf("node directory does not exist: %s", args[0])
+			// }
 			key, err := decodePrivateKey(viper.GetString("pk"))
 			cobra.CheckErr(err)
 			txID, err := createSubnet(key)
@@ -40,7 +39,11 @@ func createSubnet(key *secp256k1.PrivateKey) (ids.ID, error) {
 	subnetOwner := key.Address()
 	ctx := context.Background()
 
-	wallet, err := primary.NewWalletFromURI(ctx, uri, kc)
+	wallet, err := primary.MakeWallet(ctx, &primary.WalletConfig{
+		URI:          uri,
+		AVAXKeychain: kc,
+		EthKeychain:  kc,
+	})
 	if err != nil {
 		return ids.Empty, fmt.Errorf("failed to initialize wallet: %w", err)
 	}
@@ -52,10 +55,10 @@ func createSubnet(key *secp256k1.PrivateKey) (ids.ID, error) {
 		},
 	}
 
-	createSubnetTxID, err := wallet.P().IssueCreateSubnetTx(owner)
+	createSubnetTx, err := wallet.P().IssueCreateSubnetTx(owner)
 	if err != nil {
 		return ids.Empty, fmt.Errorf("failed to issue CreateSubnetTx: %w", err)
 	}
 
-	return createSubnetTxID, nil
+	return createSubnetTx.TxID, nil
 }

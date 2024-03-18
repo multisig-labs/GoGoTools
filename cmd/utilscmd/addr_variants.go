@@ -31,12 +31,12 @@ func addrVariants(addr string) ([]string, error) {
 	hrps := []string{"avax", "fuji", "local", "custom"}
 	chains := []string{"X", "P"}
 
-	out := []string{}
-
 	id, err := address.ParseToID(addr)
 	if err != nil {
 		return nil, err
 	}
+
+	out := []string{fmt.Sprintf("Raw Bytes: %s", id.Hex())}
 
 	for _, hrp := range hrps {
 		for _, chain := range chains {

@@ -65,8 +65,8 @@ If you have problems with the `ggt node run` command (it's currently under heavy
 # Mac
 mkdir MySubnetProject
 cd MySubnetProject
-ggt utils init v1.9.7 v0.4.8 # Downloads binaries from GitHub
-ggt node prepare NodeV1 --ava-bin=avalanchego-v1.9.7 --vm-name=subnetevm --vm-bin=subnet-evm-v0.4.8
+ggt utils init v1.10.19 v0.5.11 # Downloads binaries from GitHub
+ggt node prepare NodeV1 --ava-bin=avalanchego-v1.10.19 --vm-name=subnetevm --vm-bin=subnet-evm-v0.5.11
 ```
 
 If you then `prepared` another node NodeV2 with some different binary versions, you might have a directory structure that looks like this:

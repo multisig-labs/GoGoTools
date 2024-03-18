@@ -14,7 +14,6 @@ import (
 
 var app *application.GoGoTools
 var pkStr string
-var keyFactory = new(secp256k1.Factory)
 
 var (
 	ErrInvalidType = errors.New("invalid type")
@@ -56,7 +55,7 @@ func decodePrivateKey(enc string) (*secp256k1.PrivateKey, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to decode private key: %w", err)
 	}
-	privKey, err := keyFactory.ToPrivateKey(skBytes)
+	privKey, err := secp256k1.ToPrivateKey(skBytes)
 	if err != nil {
 		return nil, fmt.Errorf("unable to decode private key: %w", err)
 	}
