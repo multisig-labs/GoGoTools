@@ -19,8 +19,6 @@ func Test_AddrVariants(t *testing.T) {
 	t.Fatal()
 }
 
-var factory secp256k1.Factory
-
 func Test_RecoverAddr(t *testing.T) {
 	// c := blocks.GenesisCodec
 	// txId := "2uuhQuhbFDXZCsFk1AcTr43HYnYbsWBG6x1WHUWLM5uaUYVM8u"
@@ -31,7 +29,7 @@ func Test_RecoverAddr(t *testing.T) {
 	txHash := hashing.ComputeHash256(unsignedTxBytes)
 	sigBytes, err := formatting.Decode(formatting.HexNC, "0x11aeb54f353570a83cf626817eb321ead5ec0ca1be11d95f8342d2df56d50f7e4e9c15435e6dbaef11946a87cbffc9f8a3de0e6becec39bf2de1c6a6ffc41b5501")
 	require.NoError(t, err)
-	pk, err := factory.RecoverHashPublicKey(txHash, sigBytes[:])
+	pk, err := secp256k1.RecoverPublicKeyFromHash(txHash, sigBytes[:])
 	require.NoError(t, err)
 	t.Logf("%+v", pk)
 	spew.Dump(pk)
