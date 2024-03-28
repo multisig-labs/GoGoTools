@@ -32,6 +32,7 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 	cmd.AddCommand(newAddrVariantsCmd())
 	cmd.AddCommand(newMnemonicCmd())
 	cmd.AddCommand(newMnemonicKeysCmd())
+	cmd.AddCommand(newMnemonicKeyCmd())
 	cmd.AddCommand(newMnemonicAddrsCmd())
 	cmd.AddCommand(newPortFwdCmd())
 	cmd.AddCommand(newCB58DecodeCmd())
@@ -39,6 +40,7 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 	// cmd.AddCommand(newInspectBlockCmd())
 	cmd.AddCommand(newRandomCmd())
 	cmd.AddCommand(newMnemonicInsecureCmd())
+	cmd.AddCommand(newPrivkeyCmd())
 
 	return cmd
 }

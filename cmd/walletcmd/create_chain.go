@@ -64,7 +64,7 @@ func newCreateChainCmd() *cobra.Command {
 
 			if subnetID == ids.Empty {
 				app.Log.Info("No SubnetID supplied, creating...")
-				subnetID, err = createSubnet(key)
+				subnetID, err = createSubnet(key, key.Address())
 				cobra.CheckErr(err)
 				app.Log.Infof("SubnetID %s created", subnetID)
 			}
