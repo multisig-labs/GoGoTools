@@ -129,7 +129,7 @@ This will start `avalanchego` from the `NodeV1` directory and you should see the
 In another terminal, lets create our subnet (the `ggt utils init` cmd we ran earlier creates a sample genesis with all precompiles enabled):
 
 ```sh
-ggt wallet create-chain NodeV1 MyChain subnetevm subnetevm-genesis.json
+ggt wallet create-chain NodeV1 MyChain subnetevm --genesis-file subnetevm-genesis.json
 ```
 
 This command assumes NodeV1 is running, and will create a new Subnet, and then inside that subnet it will create a blockchain with the name `MyChain`, using the `subnetevm` virtual machine binary we registered earlier, and using the specified genesis file.
