@@ -1,6 +1,7 @@
 package utilscmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -51,11 +52,31 @@ func newMnemonicKeyCmd() *cobra.Command {
 
 			k := hdkeys[idx]
 
+			var address string
+			var privkey string
+
 			if chain == "C" {
-				fmt.Printf("%s %s\n", k.EthAddr(), k.EthPrivKey())
+				address = k.EthAddr()
+				privkey = k.EthPrivKey()
 			} else {
-				fmt.Printf("%s %s\n", k.AvaAddr(chain, hrp), k.AvaPrivKey())
+				address = k.AvaAddr(chain, hrp)
+				privkey = k.AvaPrivKey()
 			}
+
+			keyPair := struct {
+				Address string `json:"addr"`
+				PrivKey string `json:"pk"`
+			}{
+				Address: address,
+				PrivKey: privkey,
+			}
+
+			jsonOutput, err := json.MarshalIndent(keyPair, "", "  ")
+			if err != nil {
+				return err
+			}
+
+			fmt.Println(string(jsonOutput))
 
 			return nil
 		},
