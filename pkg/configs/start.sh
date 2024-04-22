@@ -7,7 +7,7 @@ pushd "${BASH_SOURCE%/*}"
 # Validates all subnets that have plugins installed
 # Allow connections from anywhere 
 # Disable NAT 
-# Dont try to connect to anyone bootstrap nodes
+# Dont try to connect to any bootstrap nodes
 
 cmd="bin/avalanchego \
 	--http-host=0.0.0.0 \
@@ -15,6 +15,7 @@ cmd="bin/avalanchego \
 	--bootstrap-ids= \
 	--bootstrap-ips= \
 	--sybil-protection-enabled=false \
+  --min-stake-duration=60s \
   --index-enabled=true \
   --api-keystore-enabled=true \
   --api-admin-enabled=true \
