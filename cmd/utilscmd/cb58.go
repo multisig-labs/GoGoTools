@@ -3,6 +3,7 @@ package utilscmd
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/ava-labs/avalanchego/utils/cb58"
 
@@ -39,6 +40,23 @@ func newCB58DecodeCmd() *cobra.Command {
 		},
 	}
 	return cmd
+}
+
+func newCB58DecodeNodeIDCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cb58decodenodeid [value]",
+		Short: "Decode a CB58 encoded NodeID",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			s, _ := strings.CutPrefix(args[0], "NodeID-")
+			b, err := cb58.Decode(s)
+			cobra.CheckErr(err)
+			fmt.Printf("%x\n", b)
+			return nil
+		},
+	}
+	return cmd
+
 }
 
 func newCB58DecodeSigCmd() *cobra.Command {

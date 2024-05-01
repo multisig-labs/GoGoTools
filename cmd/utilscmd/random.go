@@ -32,7 +32,7 @@ func newRandomCmd() *cobra.Command {
 
 func newRandomNodeIDCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "nodeid",
+		Use:   "node_id",
 		Short: "Create random NodeID",
 		Long:  ``,
 		Args:  cobra.ExactArgs(0),
