@@ -11,7 +11,7 @@ import (
 func newMnemonicInsecureCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "mnemonic-insecure",
-		Short: "Generate an INSECURE BIP39 mnemonic for testing, that starts with the words 'test test'",
+		Short: "Generate an INSECURE BIP39 mnemonic for testing, that starts with the words 'test test test'",
 		Long:  ``,
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -20,6 +20,7 @@ func newMnemonicInsecureCmd() *cobra.Command {
 			words := strings.Split(phrase, " ")[0:11]
 			words[0] = "test"
 			words[1] = "test"
+			words[2] = "test"
 			wordList := bip39.GetWordList()
 			var tryMnemonic string
 			for _, word := range wordList {
