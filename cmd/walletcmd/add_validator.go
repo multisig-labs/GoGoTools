@@ -68,7 +68,7 @@ func addValidator(nodeID string, blsKey string, blsSig string, duration uint64, 
 		return ids.Empty, fmt.Errorf("failed to initialize wallet: %w", err)
 	}
 	pWallet := wallet.P()
-	avaxAssetID := pWallet.AVAXAssetID()
+	avaxAssetID := pWallet.Builder().Context().AVAXAssetID
 
 	tx, err := pWallet.IssueAddPermissionlessValidatorTx(
 		&txs.SubnetValidator{Validator: txs.Validator{

@@ -8,7 +8,9 @@ import (
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/utils/set"
 	"github.com/ava-labs/avalanchego/wallet/chain/p"
+	pbuilder "github.com/ava-labs/avalanchego/wallet/chain/p/builder"
 	"github.com/ava-labs/avalanchego/wallet/chain/x"
+	xbuilder "github.com/ava-labs/avalanchego/wallet/chain/x/builder"
 	"github.com/ava-labs/avalanchego/wallet/subnet/primary"
 	"github.com/ava-labs/avalanchego/wallet/subnet/primary/common"
 	"github.com/spf13/cobra"
@@ -53,14 +55,14 @@ func fetchBalanceP(uri string, addrStr string) (uint64, error) {
 
 	pUTXOs := common.NewChainUTXOs(constants.PlatformChainID, state.UTXOs)
 	pBackend := p.NewBackend(state.PCTX, pUTXOs, nil)
-	pBuilder := p.NewBuilder(addresses, pBackend)
+	pBuilder := pbuilder.New(addresses, state.PCTX, pBackend)
 
 	currentBalances, err := pBuilder.GetBalance()
 	if err != nil {
 		return 0, err
 	}
 
-	avaxID := state.PCTX.AVAXAssetID()
+	avaxID := state.PCTX.AVAXAssetID
 	avaxBalance := currentBalances[avaxID]
 	return avaxBalance, nil
 }
@@ -82,14 +84,14 @@ func fetchBalanceX(uri string, addrStr string) (uint64, error) {
 
 	xUTXOs := common.NewChainUTXOs(constants.PlatformChainID, state.UTXOs)
 	xBackend := x.NewBackend(state.XCTX, xUTXOs)
-	xBuilder := x.NewBuilder(addresses, xBackend)
+	xBuilder := xbuilder.New(addresses, state.XCTX, xBackend)
 
 	currentBalances, err := xBuilder.GetFTBalance()
 	if err != nil {
 		return 0, err
 	}
 
-	avaxID := state.XCTX.AVAXAssetID()
+	avaxID := state.XCTX.AVAXAssetID
 	avaxBalance := currentBalances[avaxID]
 	return avaxBalance, nil
 }

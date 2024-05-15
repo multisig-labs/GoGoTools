@@ -64,7 +64,7 @@ func newRandomBLSCmd() *cobra.Command {
 			popjs, err := pop.MarshalJSON()
 			cobra.CheckErr(err)
 
-			skBytes := fmt.Sprintf("0x%x", bls.SerializeSecretKey(sk))
+			skBytes := fmt.Sprintf("0x%x", sk.Serialize())
 
 			out, err := sjson.SetBytes(popjs, "privateKey", skBytes)
 			cobra.CheckErr(err)

@@ -20,6 +20,7 @@ func newPrivkeyCmd() *cobra.Command {
 			pk, _ := strings.CutPrefix(args[0], "PrivateKey-")
 			pkBytes, err := cb58.Decode(pk)
 			cobra.CheckErr(err)
+			fmt.Printf("PrivKey Bytes: %#x\n", pkBytes)
 
 			secpk, err := secp256k1.ToPrivateKey(pkBytes)
 			cobra.CheckErr(err)
