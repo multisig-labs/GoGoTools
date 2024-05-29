@@ -43,6 +43,7 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 	cmd.AddCommand(newRandomCmd())
 	cmd.AddCommand(newMnemonicInsecureCmd())
 	cmd.AddCommand(newPrivkeyCmd())
+	cmd.AddCommand(newInspectTxCmd())
 
 	return cmd
 }
