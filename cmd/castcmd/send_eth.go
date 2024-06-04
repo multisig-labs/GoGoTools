@@ -31,7 +31,7 @@ func newSendEthCmd() *cobra.Command {
 				toAddr = args[1]
 			}
 
-			envCmd := gocmd.NewCmd("cast", "send", "--json", "--from", fromAddr, "--private-key", fromPk, "--value", args[2], toAddr)
+			envCmd := gocmd.NewCmd("cast", "send", "--json", "--from", fromAddr, "--private-key", fromPk, "--value", args[2], "--gas-price", viper.GetString("gas-price"), toAddr)
 			status := <-envCmd.Start()
 			if len(status.Stderr) > 0 {
 				return fmt.Errorf(strings.Join(status.Stderr, "\n"))

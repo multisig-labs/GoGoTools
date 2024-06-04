@@ -35,7 +35,7 @@ func newSendCmd() *cobra.Command {
 			// If any of the args have a user name, resolve to an addr
 			args = utils.ResolveAccountAddrs(accounts, args)
 
-			allArgs := []string{"send", "--json", "--from", fromAddr, "--private-key", fromPk, contractAddr, fnSig}
+			allArgs := []string{"send", "--json", "--from", fromAddr, "--private-key", fromPk, "--gas-price", viper.GetString("gas-price"), contractAddr, fnSig}
 			allArgs = append(allArgs, args[3:]...)
 			envCmd := gocmd.NewCmd("cast", allArgs...)
 

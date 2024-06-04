@@ -120,7 +120,9 @@ func getInfo() (*gjson.Result, error) {
 	out, _ = sjson.Set(out, "nodeID", getNodeID.Get("result.nodeID").String())
 	out, _ = sjson.Set(out, "networkID", getNetworkID.Get("result.networkID").Int())
 	out, _ = sjson.Set(out, "networkName", getNetworkName.Get("result.networkName").String())
-	out, _ = sjson.SetRaw(out, "uptime", getUptime.Get("result").String())
+	if getUptime.Get("result").String() != "" {
+		out, _ = sjson.SetRaw(out, "uptime", getUptime.Get("result").String())
+	}
 	out, _ = sjson.SetRaw(out, "getNodeVersion", getNodeVersion.Get("result").String())
 	out, _ = sjson.SetRaw(out, "getVMs", getVMs.Get("result").String())
 	out, _ = sjson.SetRaw(out, "subnets", getSubnets.Get("result.subnets").String())

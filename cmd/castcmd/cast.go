@@ -35,6 +35,9 @@ to make it a bit more ergonomic to issue cast commands to your node.
 	cmd.PersistentFlags().String("contracts", "contracts.json", "JSON of contract addresses")
 	_ = viper.BindPFlag("contracts", cmd.PersistentFlags().Lookup("contracts"))
 
+	cmd.PersistentFlags().String("gas-price", "25gwei", "gas price")
+	_ = viper.BindPFlag("gas-price", cmd.PersistentFlags().Lookup("gas-price"))
+
 	cmd.AddCommand(newBalancesCmd())
 	cmd.AddCommand(newCallCmd())
 	cmd.AddCommand(newSendCmd())

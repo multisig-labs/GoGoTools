@@ -61,8 +61,11 @@ To get started, run these commands in an empty directory:
 	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/ggt.json)")
 	rootCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "output more verbose logs")
 	rootCmd.PersistentFlags().String("node-url", "http://localhost:9650", "Avalanche node URL")
-	_ = viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
-	_ = viper.BindPFlag("node-url", rootCmd.PersistentFlags().Lookup("node-url"))
+
+	err := viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
+	cobra.CheckErr(err)
+	err = viper.BindPFlag("node-url", rootCmd.PersistentFlags().Lookup("node-url"))
+	cobra.CheckErr(err)
 
 	rootCmd.AddCommand(castcmd.NewCmd(app))
 	rootCmd.AddCommand(nodecmd.NewCmd(app))
