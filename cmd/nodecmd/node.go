@@ -31,5 +31,6 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 	cmd.AddCommand(newValidatorsCmd())
 	cmd.AddCommand(newPeersCmd())
 	cmd.AddCommand(newInspectTXCmd())
+	cmd.AddCommand(newRpcCmd())
 	return cmd
 }
