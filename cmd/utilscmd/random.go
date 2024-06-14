@@ -33,13 +33,15 @@ func newRandomCmd() *cobra.Command {
 func newRandomNodeIDCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "node_id",
-		Short: "Create random NodeID",
+		Short: "Create random NodeID with 10 leading zero bytes so we know its a fake nodeID",
 		Long:  ``,
 		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
 			r := make([]byte, 20)
 			_, err := rand.Read(r)
 			cobra.CheckErr(err)
+			zeroSlice := make([]byte, 10)
+			copy(r, zeroSlice)
 			nodeid := ids.NodeID(r)
 			fmt.Println(nodeid)
 		},
