@@ -8,7 +8,6 @@ import (
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
-	"github.com/ava-labs/avalanchego/utils/set"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/ava-labs/avalanchego/wallet/subnet/primary"
 	"github.com/multisig-labs/gogotools/pkg/utils"
@@ -131,10 +130,10 @@ func createChain(key *secp256k1.PrivateKey, subnetID ids.ID, name string, vmID i
 	ctx := context.Background()
 
 	wallet, err := primary.MakeWallet(ctx, &primary.WalletConfig{
-		URI:              uri,
-		AVAXKeychain:     kc,
-		EthKeychain:      kc,
-		PChainTxsToFetch: set.Of(subnetID),
+		URI:          uri,
+		AVAXKeychain: kc,
+		EthKeychain:  kc,
+		SubnetIDs:    []ids.ID{subnetID},
 	})
 	if err != nil {
 		return ids.Empty, fmt.Errorf("failed to initialize wallet: %w", err)

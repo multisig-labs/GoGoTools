@@ -6,9 +6,9 @@ import (
 
 	"github.com/ava-labs/avalanchego/api/admin"
 	"github.com/ava-labs/coreth/plugin/evm"
-	ethlog "github.com/ethereum/go-ethereum/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/exp/slog"
 )
 
 func newLogLevelCmd() *cobra.Command {
@@ -34,11 +34,13 @@ func setLoggerLevel(level string, chainName string) error {
 		return err
 	}
 
-	lvl, err := ethlog.LvlFromString(level)
+	// Convert string to slog.Level
+	var logLevel slog.Level
+	err := logLevel.UnmarshalText([]byte(strings.ToUpper(level)))
 	if err != nil {
 		return err
 	}
 
 	c := evm.NewClient(uri, chainName)
-	return c.SetLogLevel(ctx, lvl)
+	return c.SetLogLevel(ctx, logLevel)
 }

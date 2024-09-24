@@ -7,9 +7,9 @@ import (
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/utils/set"
-	"github.com/ava-labs/avalanchego/wallet/chain/p"
 	pbuilder "github.com/ava-labs/avalanchego/wallet/chain/p/builder"
-	"github.com/ava-labs/avalanchego/wallet/chain/x"
+	pwallet "github.com/ava-labs/avalanchego/wallet/chain/p/wallet"
+	xwallet "github.com/ava-labs/avalanchego/wallet/chain/x"
 	xbuilder "github.com/ava-labs/avalanchego/wallet/chain/x/builder"
 	"github.com/ava-labs/avalanchego/wallet/subnet/primary"
 	"github.com/ava-labs/avalanchego/wallet/subnet/primary/common"
@@ -41,7 +41,7 @@ func newBalanceCmd() *cobra.Command {
 func fetchBalanceP(uri string, addrStr string) (uint64, error) {
 	addr, err := address.ParseToID(addrStr)
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	addresses := set.Of(addr)
@@ -50,11 +50,11 @@ func fetchBalanceP(uri string, addrStr string) (uint64, error) {
 
 	state, err := primary.FetchState(ctx, uri, addresses)
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	pUTXOs := common.NewChainUTXOs(constants.PlatformChainID, state.UTXOs)
-	pBackend := p.NewBackend(state.PCTX, pUTXOs, nil)
+	pBackend := pwallet.NewBackend(state.PCTX, pUTXOs, nil)
 	pBuilder := pbuilder.New(addresses, state.PCTX, pBackend)
 
 	currentBalances, err := pBuilder.GetBalance()
@@ -70,7 +70,7 @@ func fetchBalanceP(uri string, addrStr string) (uint64, error) {
 func fetchBalanceX(uri string, addrStr string) (uint64, error) {
 	addr, err := address.ParseToID(addrStr)
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	addresses := set.Of(addr)
@@ -79,11 +79,11 @@ func fetchBalanceX(uri string, addrStr string) (uint64, error) {
 
 	state, err := primary.FetchState(ctx, uri, addresses)
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	xUTXOs := common.NewChainUTXOs(constants.PlatformChainID, state.UTXOs)
-	xBackend := x.NewBackend(state.XCTX, xUTXOs)
+	xBackend := xwallet.NewBackend(state.XCTX, xUTXOs)
 	xBuilder := xbuilder.New(addresses, state.XCTX, xBackend)
 
 	currentBalances, err := xBuilder.GetFTBalance()
