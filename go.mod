@@ -3,7 +3,7 @@ module github.com/multisig-labs/gogotools
 go 1.23.1
 
 require (
-	github.com/ava-labs/avalanchego v1.11.11
+	github.com/ava-labs/avalanchego v1.11.12
 	github.com/ava-labs/coreth v0.13.8
 	github.com/btcsuite/btcd v0.23.4
 	github.com/ethereum/go-ethereum v1.13.14
