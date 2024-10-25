@@ -48,6 +48,7 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 	cmd.AddCommand(newCreateChainCmd())
 	cmd.AddCommand(newAddValidatorCmd())
 	cmd.AddCommand(newAddSubnetValidatorCmd())
+	cmd.AddCommand(newConvertSubnetCmd())
 	cmd.AddCommand(newBalanceCmd())
 	cmd.AddCommand(newDeployERC20Cmd())
 
