@@ -8,6 +8,7 @@ import (
 	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/spf13/cobra"
 )
 
@@ -38,6 +39,9 @@ func newPrivkeyCmd() *cobra.Command {
 
 			secpk, err := secp256k1.ToPrivateKey(pkBytes)
 			cobra.CheckErr(err)
+
+			ethAddr := ethcrypto.PubkeyToAddress(secpk.ToECDSA().PublicKey).String()
+			fmt.Printf("Eth addr: %s\n", ethAddr)
 
 			addr, err := address.Format("P", "avax", secpk.PublicKey().Address().Bytes())
 			cobra.CheckErr(err)
