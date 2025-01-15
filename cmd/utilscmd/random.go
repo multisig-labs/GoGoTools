@@ -58,7 +58,7 @@ func newRandomBLSCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 
 			pop := &signer.ProofOfPossession{}
-			sk, err := bls.NewSecretKey()
+			sk, err := bls.NewSigner()
 			cobra.CheckErr(err)
 			pop = signer.NewProofOfPossession(sk)
 			err = pop.Verify()
@@ -66,7 +66,7 @@ func newRandomBLSCmd() *cobra.Command {
 			popjs, err := pop.MarshalJSON()
 			cobra.CheckErr(err)
 
-			skBytes := fmt.Sprintf("0x%x", sk.Serialize())
+			skBytes := fmt.Sprintf("0x%x", sk.ToBytes())
 
 			out, err := sjson.SetBytes(popjs, "privateKey", skBytes)
 			cobra.CheckErr(err)

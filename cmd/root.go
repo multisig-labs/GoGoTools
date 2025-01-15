@@ -10,6 +10,7 @@ import (
 	"github.com/multisig-labs/gogotools/cmd/subnetcmd"
 	"github.com/multisig-labs/gogotools/cmd/utilscmd"
 	"github.com/multisig-labs/gogotools/cmd/walletcmd"
+	"github.com/multisig-labs/gogotools/cmd/warpcmd"
 	"github.com/multisig-labs/gogotools/pkg/application"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -71,6 +72,7 @@ To get started, run these commands in an empty directory:
 	rootCmd.AddCommand(nodecmd.NewCmd(app))
 	rootCmd.AddCommand(subnetcmd.NewCmd(app))
 	rootCmd.AddCommand(utilscmd.NewCmd(app))
+	rootCmd.AddCommand(warpcmd.NewCmd(app))
 	rootCmd.AddCommand(walletcmd.NewCmd(app))
 	rootCmd.AddCommand(versionCmd)
 	return rootCmd

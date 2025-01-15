@@ -4,5 +4,7 @@
 .DS_Store
 .env
 
-bin/
+artifacts
+bin
+cache
 _private

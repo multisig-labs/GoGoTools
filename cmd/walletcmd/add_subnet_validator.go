@@ -49,11 +49,8 @@ func addSubnetValidator(subnetID ids.ID, nodeID ids.NodeID, duration uint64, wei
 	startTime := time.Now().Add(5 * time.Second)
 	endTime := startTime.Add(time.Duration(duration) * time.Second)
 
-	wallet, err := primary.MakeWallet(ctx, &primary.WalletConfig{
-		URI:          uri,
-		AVAXKeychain: kc,
-		EthKeychain:  kc,
-		SubnetIDs:    []ids.ID{subnetID},
+	wallet, err := primary.MakeWallet(ctx, uri, kc, kc, primary.WalletConfig{
+		SubnetIDs: []ids.ID{subnetID},
 	})
 	if err != nil {
 		return ids.Empty, fmt.Errorf("failed to initialize wallet: %w", err)

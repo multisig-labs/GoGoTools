@@ -42,11 +42,7 @@ func createSubnet(key *secp256k1.PrivateKey, subnetOwner ids.ShortID) (ids.ID, e
 	kc := secp256k1fx.NewKeychain(key)
 	ctx := context.Background()
 
-	wallet, err := primary.MakeWallet(ctx, &primary.WalletConfig{
-		URI:          uri,
-		AVAXKeychain: kc,
-		EthKeychain:  kc,
-	})
+	wallet, err := primary.MakeWallet(ctx, uri, kc, kc, primary.WalletConfig{})
 	if err != nil {
 		return ids.Empty, fmt.Errorf("failed to initialize wallet: %w", err)
 	}

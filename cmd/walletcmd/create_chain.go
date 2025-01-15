@@ -129,11 +129,8 @@ func createChain(key *secp256k1.PrivateKey, subnetID ids.ID, name string, vmID i
 	kc := secp256k1fx.NewKeychain(key)
 	ctx := context.Background()
 
-	wallet, err := primary.MakeWallet(ctx, &primary.WalletConfig{
-		URI:          uri,
-		AVAXKeychain: kc,
-		EthKeychain:  kc,
-		SubnetIDs:    []ids.ID{subnetID},
+	wallet, err := primary.MakeWallet(ctx, uri, kc, kc, primary.WalletConfig{
+		SubnetIDs: []ids.ID{subnetID},
 	})
 	if err != nil {
 		return ids.Empty, fmt.Errorf("failed to initialize wallet: %w", err)

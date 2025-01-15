@@ -64,11 +64,11 @@ func convertSubnet(subnetID ids.ID, mgrChainID ids.ID, mgrAddress common.Address
 	kc := secp256k1fx.NewKeychain(key)
 
 	validationID := subnetID.Append(0)
-	conversionID, err := message.SubnetConversionID(message.SubnetConversionData{
+	conversionID, err := message.SubnetToL1ConversionID(message.SubnetToL1ConversionData{
 		SubnetID:       subnetID,
 		ManagerChainID: mgrChainID,
 		ManagerAddress: mgrAddress.Bytes(),
-		Validators: []message.SubnetConversionValidatorData{
+		Validators: []message.SubnetToL1ConversionValidatorData{
 			{
 				NodeID:       nodeID.Bytes(),
 				BLSPublicKey: nodePoP.PublicKey,
@@ -81,11 +81,8 @@ func convertSubnet(subnetID ids.ID, mgrChainID ids.ID, mgrAddress common.Address
 	}
 
 	ctx := context.Background()
-	wallet, err := primary.MakeWallet(ctx, &primary.WalletConfig{
-		URI:          uri,
-		AVAXKeychain: kc,
-		EthKeychain:  kc,
-		SubnetIDs:    []ids.ID{subnetID},
+	wallet, err := primary.MakeWallet(ctx, uri, kc, kc, primary.WalletConfig{
+		SubnetIDs: []ids.ID{subnetID},
 	})
 	if err != nil {
 		return nil, err
@@ -98,11 +95,11 @@ func convertSubnet(subnetID ids.ID, mgrChainID ids.ID, mgrAddress common.Address
 		Addresses: kc.Addresses().List(),
 	}
 
-	tx, err := pWallet.IssueConvertSubnetTx(
+	tx, err := pWallet.IssueConvertSubnetToL1Tx(
 		subnetID,
 		mgrChainID,
 		mgrAddress.Bytes(),
-		[]*txs.ConvertSubnetValidator{
+		[]*txs.ConvertSubnetToL1Validator{
 			{
 				NodeID:                nodeID.Bytes(),
 				Weight:                weight,

@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/ava-labs/avalanchego/vms/platformvm/txs"
-	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +22,8 @@ func newInspectTxCmd() *cobra.Command {
 			var txb []byte
 			var err error
 			if strings.HasPrefix(txStr, "0x") {
-				txb = common.Hex2Bytes(txStr)
+				txb, err = hexutil.Decode(txStr)
+				cobra.CheckErr(err)
 			} else {
 				txb, err = b64.StdEncoding.DecodeString(txStr)
 				cobra.CheckErr(err)
@@ -31,6 +32,7 @@ func newInspectTxCmd() *cobra.Command {
 			tx := &txs.Tx{}
 			_, err = txs.Codec.Unmarshal(txb, tx)
 			cobra.CheckErr(err)
+			// fmt.Printf("%+v", tx)
 			js, err := json.Marshal(tx)
 			cobra.CheckErr(err)
 			fmt.Printf("%s\n", js)
