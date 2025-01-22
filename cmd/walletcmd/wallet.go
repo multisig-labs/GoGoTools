@@ -51,7 +51,11 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 	cmd.AddCommand(newConvertSubnetCmd())
 	cmd.AddCommand(newBalanceCmd())
 	cmd.AddCommand(newDeployERC20Cmd())
-
+	cmd.AddCommand(newRemoveValidatorCmd())
+	cmd.AddCommand(newDisableL1ValidatorCmd())
+	cmd.AddCommand(newSetL1WeightCmd())
+	cmd.AddCommand(newSignWarpMsgCmd())
+	cmd.AddCommand(newSignL1WeightMsgCmd())
 	return cmd
 }
 
