@@ -6,9 +6,26 @@ import (
 	"strings"
 
 	"github.com/ava-labs/avalanchego/utils/cb58"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 
 	"github.com/spf13/cobra"
 )
+
+func newCB58EncodeCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "cb58encode [value]",
+		Short: "Encode a CB58 encoded string",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			b, err := hexutil.Decode(args[0])
+			cb, err := cb58.Encode(b)
+			cobra.CheckErr(err)
+			fmt.Printf("%s\n", cb)
+			return nil
+		},
+	}
+	return cmd
+}
 
 func newCB58DecodeCmd() *cobra.Command {
 	cmd := &cobra.Command{

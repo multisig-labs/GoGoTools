@@ -38,6 +38,7 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 	cmd.AddCommand(newCB58DecodeCmd())
 	cmd.AddCommand(newCB58DecodeSigCmd())
 	cmd.AddCommand(newCB58DecodeNodeIDCmd())
+	cmd.AddCommand(newCB58EncodeCmd())
 	cmd.AddCommand(newBech32Cmd())
 	// cmd.AddCommand(newInspectBlockCmd())
 	cmd.AddCommand(newRandomCmd())

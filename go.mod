@@ -7,6 +7,7 @@ require (
 	github.com/ava-labs/coreth v0.13.9-rc.2-encapsulate-signer
 	github.com/ava-labs/subnet-evm v0.7.1-rc.0
 	github.com/btcsuite/btcd v0.23.4
+	github.com/caarlos0/env/v11 v11.3.1
 	github.com/ethereum/go-ethereum v1.13.14
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/hashicorp/go-getter v1.7.1
@@ -58,6 +59,9 @@ require (
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/holiman/billy v0.0.0-20240216141850-2abb0c79d3c4 // indirect
+	github.com/huin/goupnp v1.3.0 // indirect
+	github.com/jackpal/gateway v1.0.6 // indirect
+	github.com/jackpal/go-nat-pmp v1.0.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/klauspost/compress v1.16.5 // indirect
 	github.com/kr/pretty v0.3.1 // indirect

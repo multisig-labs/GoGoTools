@@ -2,6 +2,7 @@ package nodecmd
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/multisig-labs/gogotools/pkg/utils"
 	"github.com/spf13/cobra"
@@ -27,10 +28,25 @@ func newInfoCmd() *cobra.Command {
 
 // It's not you, Types, it's me. I think we need a break for a bit.
 func getInfo() (*gjson.Result, error) {
-	uri := viper.GetString("node-url")
-	urlInfo := fmt.Sprintf("%s/ext/info", uri)
-	urlP := fmt.Sprintf("%s/ext/bc/P", uri)
-	urlAdmin := fmt.Sprintf("%s/ext/admin", uri)
+	nodeURL := viper.GetString("node-url")
+	parsedURL, err := url.Parse(nodeURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid node-url: %w", err)
+	}
+
+	// Store the query string if present
+	queryString := parsedURL.RawQuery
+	if queryString != "" {
+		queryString = "?" + queryString
+	}
+
+	// Create base URL without query string
+	parsedURL.RawQuery = ""
+	baseURL := parsedURL.String()
+
+	urlInfo := fmt.Sprintf("%s/ext/info%s", baseURL, queryString)
+	urlP := fmt.Sprintf("%s/ext/bc/P%s", baseURL, queryString)
+	urlAdmin := fmt.Sprintf("%s/ext/admin%s", baseURL, queryString)
 
 	getNetworkName, err := utils.FetchRPCGJSON(urlInfo, "info.getNetworkName", "")
 	if err != nil {
