@@ -36,7 +36,7 @@ func addrVariants(addr string) ([]string, error) {
 		return nil, err
 	}
 
-	out := []string{fmt.Sprintf("Raw Bytes: %s", id.Hex())}
+	out := []string{fmt.Sprintf("Raw Bytes of %s: %s", addr, id.Hex())}
 
 	for _, hrp := range hrps {
 		for _, chain := range chains {
