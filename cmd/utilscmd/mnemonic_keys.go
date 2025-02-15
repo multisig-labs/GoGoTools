@@ -33,9 +33,11 @@ func newMnemonicKeysCmd() *cobra.Command {
 				return fmt.Errorf("error deriving keys: %s", err)
 			}
 
-			fmt.Printf("%-16s %42s %45s %64s %61s\n", "Path", "EVM Addr", "Ava Addr", "EVM Private Key", "Ava Private Key")
+			fmtStr := "%-18s %-42s %-45s %-64s %-61s\n"
+
+			fmt.Printf(fmtStr, "Path", "EVM Addr", "Ava Addr", "EVM Private Key", "Ava Private Key")
 			for _, k := range hdkeys {
-				fmt.Printf("%-16s %42s %45s %64s %61s\n",
+				fmt.Printf(fmtStr,
 					k.Path,
 					k.EthAddr(),
 					k.AvaAddr("P", hrp),
@@ -44,14 +46,15 @@ func newMnemonicKeysCmd() *cobra.Command {
 				)
 			}
 
-			fmt.Println("=== Avalanche Derivation Path ===")
+			fmt.Println("\n=== Avalanche Derivation Path ===")
 			hdkeys, err = hd.DeriveHDKeys(args[0], hd.AvaDerivationPath, numKeys)
 			if err != nil {
 				return fmt.Errorf("error deriving keys: %s", err)
 			}
 
+			fmt.Printf(fmtStr, "Path", "EVM Addr", "Ava Addr", "EVM Private Key", "Ava Private Key")
 			for _, k := range hdkeys {
-				fmt.Printf("%s %s %s %s %s\n",
+				fmt.Printf(fmtStr,
 					k.Path,
 					k.EthAddr(),
 					k.AvaAddr("P", hrp),
