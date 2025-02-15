@@ -36,18 +36,7 @@ func newMnemonicKeysCmd() *cobra.Command {
 				fmt.Printf("%s %s %s\n", k.EthAddr(), k.EthPrivKey(), k.Path)
 			}
 
-			fmt.Printf("=== X-Chain [%s] ===\n", hrp)
-
-			hdkeys, err = hd.DeriveHDKeys(args[0], hd.AvaDerivationPath, 10)
-			if err != nil {
-				return fmt.Errorf("error deriving keys: %s", err)
-			}
-
-			for _, k := range hdkeys {
-				fmt.Printf("%s %s %s\n", k.AvaAddr("X", hrp), k.AvaPrivKey(), k.Path)
-			}
-
-			fmt.Printf("=== P-Chain [%s] ===\n", hrp)
+			fmt.Printf("\n=== P-Chain [%s] ===\n", hrp)
 
 			hdkeys, err = hd.DeriveHDKeys(args[0], hd.AvaDerivationPath, 10)
 			if err != nil {
@@ -56,6 +45,17 @@ func newMnemonicKeysCmd() *cobra.Command {
 
 			for _, k := range hdkeys {
 				fmt.Printf("%s %s %s\n", k.AvaAddr("P", hrp), k.AvaPrivKey(), k.Path)
+			}
+
+			fmt.Printf("\n=== P-Chain [%s] (using eth derivation path)===\n", hrp)
+
+			hdkeys, err = hd.DeriveHDKeys(args[0], hd.EthDerivationPath, 10)
+			if err != nil {
+				return fmt.Errorf("error deriving keys: %s", err)
+			}
+
+			for _, k := range hdkeys {
+				fmt.Printf("%s %s %s\n", k.AvaAddr("P", hrp), k.EthPrivKey(), k.Path)
 			}
 
 			return nil

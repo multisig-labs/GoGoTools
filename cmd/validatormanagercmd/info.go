@@ -69,8 +69,8 @@ func newInfoCmd() *cobra.Command {
 			uptimeClient, err := uptime.NewClient(l1Config.ValidatorsURL)
 			cobra.CheckErr(err)
 
-			info.Uptime, err = uptimeClient.GetCurrentValidators(context.Background())
-			cobra.CheckErr(err)
+			info.Uptime, _ = uptimeClient.GetCurrentValidators(context.Background())
+			// cobra.CheckErr(err)
 
 			ec, err := ethclient.Dial(l1Config.EvmURL)
 			cobra.CheckErr(err)
@@ -90,8 +90,9 @@ func newInfoCmd() *cobra.Command {
 					end = len(validationIDs)
 				}
 				batch, err := getValidatorsBatch(ec, l1Config.VMAddress, validationIDs[i:end])
-				cobra.CheckErr(err)
-				allValidators = append(allValidators, batch...)
+				if err == nil {
+					allValidators = append(allValidators, batch...)
+				}
 			}
 			info.ContractValidators = allValidators
 

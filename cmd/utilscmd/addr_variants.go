@@ -29,23 +29,20 @@ func newAddrVariantsCmd() *cobra.Command {
 
 func addrVariants(addr string) ([]string, error) {
 	hrps := []string{"avax", "fuji", "local", "custom"}
-	chains := []string{"X", "P"}
 
 	id, err := address.ParseToID(addr)
 	if err != nil {
 		return nil, err
 	}
 
-	out := []string{fmt.Sprintf("Raw Bytes of %s: %s", addr, id.Hex())}
+	out := []string{fmt.Sprintf("Raw Bytes of %s: %0xs", strings.TrimPrefix(addr, "P-"), id.Hex())}
 
 	for _, hrp := range hrps {
-		for _, chain := range chains {
-			a, err := address.Format(chain, hrp, id.Bytes())
-			if err != nil {
-				return nil, err
-			}
-			out = append(out, a)
+		a, err := address.Format("P", hrp, id.Bytes())
+		if err != nil {
+			return nil, err
 		}
+		out = append(out, a)
 	}
 
 	return out, nil

@@ -2,6 +2,7 @@ package warpcmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -10,6 +11,8 @@ import (
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/vms/platformvm/warp"
 	avalancheWarp "github.com/ava-labs/avalanchego/vms/platformvm/warp"
+	avalanchemesseges "github.com/ava-labs/avalanchego/vms/platformvm/warp/message"
+
 	warppayload "github.com/ava-labs/avalanchego/vms/platformvm/warp/payload"
 	"github.com/ava-labs/subnet-evm/core/types"
 	"github.com/ava-labs/subnet-evm/ethclient"
@@ -102,6 +105,9 @@ func newParseWarpMsgCmd() *cobra.Command {
 		Long:  ``,
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			var payload []byte
+			var payloadType string
+
 			m, err := parseWarpMessage(args[0])
 			if err != nil && strings.Contains(err.Error(), "insufficient length") {
 				um, err := parseUnsignedWarpMessage(args[0])
@@ -111,7 +117,10 @@ func newParseWarpMsgCmd() *cobra.Command {
 				cobra.CheckErr(err)
 			}
 
-			fmt.Printf("\n%+v\n", m)
+			payloadType, payload, err = parsePayload(m.Payload)
+			cobra.CheckErr(err)
+
+			fmt.Printf("\n%+v\n\nPayload (%s): %s\n", m, payloadType, payload)
 		},
 	}
 	return cmd
@@ -163,4 +172,36 @@ func warpMessageFromLogs(logs []*types.Log) (*avalancheWarp.UnsignedMessage, err
 
 func parseSendWarpMessage(log types.Log) (*avalancheWarp.UnsignedMessage, error) {
 	return subnetEvmWarp.UnpackSendWarpEventDataToMessage(log.Data)
+}
+
+// Returns json of the decoded payload
+func parsePayload(msg []byte) (string, []byte, error) {
+	addressedCall, err := warppayload.ParseAddressedCall(msg)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to parse addressed call: %w", err)
+	}
+
+	payloadIntf, err := avalanchemesseges.Parse(addressedCall.Payload)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to parse payload: %w", err)
+	}
+
+	var out []byte
+
+	switch payload := payloadIntf.(type) {
+	case *avalanchemesseges.RegisterL1Validator:
+		out, err = json.Marshal(payload)
+		if err != nil {
+			return "", nil, err
+		}
+	case *avalanchemesseges.L1ValidatorRegistration:
+		out, err = json.Marshal(payload)
+		if err != nil {
+			return "", nil, err
+		}
+	default:
+		return "", nil, fmt.Errorf("unknown type: %T", payload)
+	}
+
+	return fmt.Sprintf("%T", payloadIntf), out, nil
 }

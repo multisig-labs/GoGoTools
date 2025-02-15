@@ -20,5 +20,6 @@ func NewCmd(injectedApp *application.GoGoTools) *cobra.Command {
 	}
 
 	cmd.AddCommand(newInfoCmd())
+	cmd.AddCommand(newGetCmd())
 	return cmd
 }
