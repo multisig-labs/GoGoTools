@@ -10,6 +10,8 @@ import (
 )
 
 func newMnemonicKeysCmd() *cobra.Command {
+	var numKeys int
+
 	cmd := &cobra.Command{
 		Use:   "mnemonic-keys [mnemonic] [hrp]",
 		Short: "Show keys and addresses for a BIP39 mnemonic",
@@ -25,41 +27,41 @@ func newMnemonicKeysCmd() *cobra.Command {
 				hrp = args[1]
 			}
 
-			fmt.Println("=== C-Chain ===")
+			fmt.Println("=== Ethereum Derivation Path ===")
+			hdkeys, err := hd.DeriveHDKeys(args[0], hd.EthDerivationPath, numKeys)
+			if err != nil {
+				return fmt.Errorf("error deriving keys: %s", err)
+			}
 
-			hdkeys, err := hd.DeriveHDKeys(args[0], hd.EthDerivationPath, 10)
+			fmt.Printf("%-16s %42s %45s %64s %61s\n", "Path", "EVM Addr", "Ava Addr", "EVM Private Key", "Ava Private Key")
+			for _, k := range hdkeys {
+				fmt.Printf("%-16s %42s %45s %64s %61s\n",
+					k.Path,
+					k.EthAddr(),
+					k.AvaAddr("P", hrp),
+					k.EthPrivKey(),
+					k.AvaPrivKey(),
+				)
+			}
+
+			fmt.Println("=== Avalanche Derivation Path ===")
+			hdkeys, err = hd.DeriveHDKeys(args[0], hd.AvaDerivationPath, numKeys)
 			if err != nil {
 				return fmt.Errorf("error deriving keys: %s", err)
 			}
 
 			for _, k := range hdkeys {
-				fmt.Printf("%s %s %s\n", k.EthAddr(), k.EthPrivKey(), k.Path)
+				fmt.Printf("%s %s %s %s %s\n",
+					k.Path,
+					k.EthAddr(),
+					k.AvaAddr("P", hrp),
+					k.EthPrivKey(),
+					k.AvaPrivKey(),
+				)
 			}
-
-			fmt.Printf("\n=== P-Chain [%s] ===\n", hrp)
-
-			hdkeys, err = hd.DeriveHDKeys(args[0], hd.AvaDerivationPath, 10)
-			if err != nil {
-				return fmt.Errorf("error deriving keys: %s", err)
-			}
-
-			for _, k := range hdkeys {
-				fmt.Printf("%s %s %s\n", k.AvaAddr("P", hrp), k.AvaPrivKey(), k.Path)
-			}
-
-			fmt.Printf("\n=== P-Chain [%s] (using eth derivation path)===\n", hrp)
-
-			hdkeys, err = hd.DeriveHDKeys(args[0], hd.EthDerivationPath, 10)
-			if err != nil {
-				return fmt.Errorf("error deriving keys: %s", err)
-			}
-
-			for _, k := range hdkeys {
-				fmt.Printf("%s %s %s\n", k.AvaAddr("P", hrp), k.EthPrivKey(), k.Path)
-			}
-
 			return nil
 		},
 	}
+	cmd.Flags().IntVarP(&numKeys, "num-keys", "n", 10, "number of keys to generate")
 	return cmd
 }
