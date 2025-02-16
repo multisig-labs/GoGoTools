@@ -12,20 +12,8 @@ default:
   @just --list --unsorted
 
 build:
-	CGO_ENABLED=1 go build -ldflags "{{LDFLAGS}}" -o bin/ggt main.go
+	CGO_ENABLED=1 go build -ldflags "{{LDFLAGS}}" -o bin/ggt cmd/*
 
 install: build
   mv bin/ggt $GOPATH/bin/ggt
 
-# Whack, but it works
-gen-contracts:
-	#!/usr/bin/env bash -eo pipefail
-	CORETH=0.13.2
-	THISDIR=$PWD
-	forge build
-	binfile=$(mktemp)
-	cat artifacts/erc20.sol/CustomERC20.json | jq -r '.bytecode.object' > ${binfile}
-	echo "Generating GO code..."
-	cd $GOPATH/pkg/mod/github.com/ava-labs/coreth@v${CORETH}
-	cat $THISDIR/artifacts/erc20.sol/CustomERC20.json | jq '.abi' | go run ./cmd/abigen/  --bin ${binfile} --pkg erc20 --out $THISDIR/pkg/contracts/erc20/erc20.go --abi -
-	cp $THISDIR/artifacts/erc20.sol/CustomERC20.json $THISDIR/pkg/contracts/erc20/erc20.json

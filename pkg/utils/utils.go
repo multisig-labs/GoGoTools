@@ -1,49 +1,141 @@
 package utils
 
 import (
-	"errors"
+	"crypto/ecdsa"
+	"encoding/hex"
 	"fmt"
-	"io"
-	"io/fs"
 	"math/big"
-	"os"
-	"path/filepath"
-	"regexp"
-	"runtime"
 	"strings"
 	"time"
 
+	"github.com/ava-labs/avalanchego/ids"
+	"github.com/ava-labs/avalanchego/utils/cb58"
+	"github.com/ava-labs/avalanchego/utils/crypto/bls"
+	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
+	"github.com/ava-labs/avalanchego/utils/formatting/address"
+	"github.com/ava-labs/coreth/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/go-resty/resty/v2"
-	"github.com/hashicorp/go-getter"
-	"github.com/multisig-labs/gogotools/pkg/constants"
-	"github.com/shopspring/decimal"
 	"github.com/tidwall/gjson"
 )
 
-func Fetch(url string, body string) (string, error) {
-	client := resty.New()
-	// client.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
-	client.SetTimeout(30 * time.Second)
-
-	var resp *resty.Response
+// Given nodeID in either 0x123 or NodeID-123 format, return the [20]byte ids.NodeID format
+func ParseNodeID(nodeID string) (ids.NodeID, error) {
+	var nodeShortID ids.NodeID
 	var err error
 
-	if body == "" {
-		resp, err = client.R().
-			EnableTrace().
-			SetHeader("Content-Type", "application/json").
-			SetHeader("Accept", "application/json").
-			Get(url)
-	} else {
-		resp, err = client.R().
-			EnableTrace().
-			SetHeader("Content-Type", "application/json").
-			SetHeader("Accept", "application/json").
-			SetBody(body).
-			Post(url)
+	if strings.HasPrefix(nodeID, "NodeID-") {
+		nodeShortID, err = ids.NodeIDFromString(nodeID)
+		if err != nil {
+			return ids.NodeID{}, fmt.Errorf("error decoding nodeID %s: %w", nodeID, err)
+		}
+		return nodeShortID, nil
 	}
 
-	return resp.String(), err
+	if strings.HasPrefix(nodeID, "0x") {
+		b := HexToBytes(nodeID)
+		b20 := common.BytesToAddress(b)
+		return ids.NodeID(b20), nil
+	}
+
+	return ids.NodeID{}, fmt.Errorf("invalid nodeID format %s: %w", nodeID, err)
+}
+
+// Given nodeID in [20]bytes address format, return the [20]byte ids.NodeID format
+func AddressToNodeID(nodeID common.Address) ids.NodeID {
+	return ids.NodeID(nodeID)
+}
+
+// returns the bytes represented by the hexadecimal string s, may be prefixed with "0x".
+func HexToBytes(s string) []byte {
+	b, _ := hex.DecodeString(strings.TrimPrefix(s, "0x"))
+	return b
+}
+
+// returns the hexadecimal string representation of the bytes b, prefixed with "0x".
+func BytesToHex(b []byte) string {
+	return "0x" + hex.EncodeToString(b)
+}
+
+// Converts a '0x'-prefixed hex string or cb58-encoded string to an ID.
+func HexOrCB58ToID(s string) (ids.ID, error) {
+	if strings.HasPrefix(s, "0x") {
+		bytes, err := hex.DecodeString(strings.TrimPrefix(s, "0x"))
+		if err != nil {
+			return ids.ID{}, err
+		}
+		return ids.ToID(bytes)
+	}
+	return ids.FromString(s)
+}
+
+// Support PrivateKey-(cb58) or hex string with optional 0x prefix
+func ParsePrivateKey(pkStr string) (avaKey *secp256k1.PrivateKey, ethKey *ecdsa.PrivateKey, err error) {
+	var pkBytes []byte
+	if strings.HasPrefix(pkStr, "PrivateKey-") {
+		pkBytes, err = cb58.Decode(strings.TrimPrefix(pkStr, "PrivateKey-"))
+		if err != nil {
+			return nil, nil, err
+		}
+	} else {
+		pkBytes, err = hex.DecodeString(strings.TrimPrefix(pkStr, "0x"))
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	avaKey, err = secp256k1.ToPrivateKey(pkBytes)
+	if err != nil {
+		return nil, nil, err
+	}
+	ethKey, err = crypto.HexToECDSA(fmt.Sprintf("%x", pkBytes))
+	if err != nil {
+		return nil, nil, err
+	}
+	return avaKey, ethKey, nil
+}
+
+// Parse a private key and return the ava and eth addresses
+// network is the network name (mainnet, fuji, etc)
+func ParsePrivateKeyToAddresses(privateKeyStr string, network string) (string, string, error) {
+	pchainKey, ethKey, err := ParsePrivateKey(privateKeyStr)
+	if err != nil {
+		return "", "", err
+	}
+	avaAddr, err := address.Format("P", network, pchainKey.PublicKey().Address().Bytes())
+	if err != nil {
+		return "", "", err
+	}
+	ethAddr := crypto.PubkeyToAddress(ethKey.PublicKey)
+
+	return avaAddr, ethAddr.String(), nil
+}
+
+func ValidateBLSKeys(blsPubKey string, blsPop string) error {
+	if _, err := bls.PublicKeyFromCompressedBytes(HexToBytes(blsPubKey)); err != nil {
+		return fmt.Errorf("error decoding blsPubKey %s: %w", blsPubKey, err)
+	}
+	if _, err := bls.SignatureFromBytes(HexToBytes(blsPop)); err != nil {
+		return fmt.Errorf("error decoding blsPop %s: %w", blsPop, err)
+	}
+	return nil
+}
+
+func ConvertNanoAvaxToWei(nanoAvax int64) *big.Int {
+	return new(big.Int).Mul(big.NewInt(nanoAvax), big.NewInt(1e9))
+}
+
+func ConvertAvaxToWei(avax float64) *big.Int {
+	return new(big.Int).Mul(big.NewInt(int64(avax*1e9)), big.NewInt(1e9))
+}
+
+func FetchRPCGJSON(url string, method string, params string) (*gjson.Result, error) {
+	s, err := FetchRPC(url, method, params)
+	if err != nil {
+		return nil, err
+	}
+	out := gjson.Parse(s)
+	return &out, nil
 }
 
 func FetchRPC(url string, method string, params string) (string, error) {
@@ -78,350 +170,36 @@ func FetchRPC(url string, method string, params string) (string, error) {
 	return resp.String(), err
 }
 
-func FetchRPCGJSON(url string, method string, params string) (*gjson.Result, error) {
-	s, err := FetchRPC(url, method, params)
-	if err != nil {
-		return nil, err
-	}
-	out := gjson.Parse(s)
-	return &out, nil
-}
-
-func LinkFile(src, dest string) error {
-	full, err := filepath.Abs(src)
-	if err != nil {
-		return err
-	}
-	return os.Symlink(full, dest)
-}
-
-func CopyFile(src, dest string) error {
-	in, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer in.Close()
-	out, err := os.Create(dest)
-	if err != nil {
-		return err
-	}
-	defer func() {
-		cerr := out.Close()
-		if err == nil {
-			err = cerr
-		}
-	}()
-	if _, err = io.Copy(out, in); err != nil {
-		return err
-	}
-	if err = out.Sync(); err != nil {
-		return err
-	}
-	if err = out.Chmod(constants.DefaultPerms755); err != nil {
-		return err
-	}
-	return nil
-}
-
-// Returns filenames that have ext in root
-func FilePathWalk(root string, ext string) ([]string, error) {
-	var files []string
-	err := filepath.WalkDir(root, func(path string, info fs.DirEntry, err error) error {
-		if info != nil && !info.IsDir() && strings.HasSuffix(info.Name(), ext) {
-			files = append(files, path)
-		}
+// DecodeError decodes an error from an ABI string and an error.
+// usage: err = DecodeError(abiStr, err)
+func DecodeError(abiStr string, err error) error {
+	if err == nil {
 		return nil
-	})
-	return files, err
-}
-
-func Truncate(filename string, perm os.FileMode) error {
-	f, err := os.OpenFile(filename, os.O_TRUNC, perm)
-	if err != nil {
-		return fmt.Errorf("could not open file %q for truncation: %v", filename, err)
 	}
-	if err = f.Close(); err != nil {
-		return fmt.Errorf("could not close file handler for %q after truncation: %v", filename, err)
-	}
-	return nil
-}
-
-func FileExists(filename string) bool {
-	info, err := os.Stat(filename)
-	if errors.Is(err, fs.ErrNotExist) {
-		return false
-	}
-	return !info.IsDir()
-}
-
-func DirExists(dir string) bool {
-	info, err := os.Stat(dir)
-	if errors.Is(err, fs.ErrNotExist) {
-		return false
-	}
-	return info.IsDir()
-}
-
-// Create and write a new file
-func WriteFileBytes(name string, data []byte) error {
-	f, err := os.Create(filepath.Clean(name))
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	if err := f.Chmod(0600); err != nil {
-		return err
-	}
-	if _, err := f.Write(data); err != nil {
-		return err
-	}
-
-	return f.Sync()
-}
-
-func WatchFile(filePath string) error {
-	initialStat, err := os.Stat(filePath)
-	if err != nil {
-		return err
-	}
-	for {
-		stat, err := os.Stat(filePath)
-		if err != nil {
-			return err
-		}
-		if stat.Size() != initialStat.Size() || stat.ModTime() != initialStat.ModTime() {
-			break
-		}
-		time.Sleep(2 * time.Second)
-	}
-	return nil
-}
-
-func LoadJSON(path string) (*gjson.Result, error) {
-	b, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	if !gjson.Valid(string(b)) {
-		return nil, fmt.Errorf("invalid JSON reading %s", path)
-	}
-	out := gjson.Parse(string(b))
-	return &out, nil
-}
-
-// From https://goethereumbook.org/util-go/
-// Convert from gwei to ether
-func ToDecimal(ivalue interface{}, decimals int) decimal.Decimal {
-	value := new(big.Int)
-	switch v := ivalue.(type) {
-	case string:
-		value.SetString(v, 0)
-	case *big.Int:
-		value = v
-	}
-
-	mul := decimal.NewFromFloat(float64(10)).Pow(decimal.NewFromFloat(float64(decimals)))
-	num, _ := decimal.NewFromString(value.String())
-	result := num.Div(mul)
-
-	return result
-}
-
-// Given a args array, look for "0.3ether" and convert to wei
-func ResolveAmounts(args []string) []string {
-	re := regexp.MustCompile("([0-9.]+)ether$")
-	wad := big.NewFloat(1e18)
-
-	out := []string{}
-	for _, arg := range args {
-		matches := re.FindStringSubmatch(arg)
-		if len(matches) == 2 {
-			amt_f := new(big.Float)
-			amt_f.SetString(matches[1])
-			amt_fwad := amt_f.Mul(amt_f, wad)
-			amt_iwad, _ := amt_fwad.Int(nil)
-			out = append(out, amt_iwad.String())
-		} else {
-			out = append(out, arg)
+	parsedABI, _ := abi.JSON(strings.NewReader(abiStr))
+	// Try to decode the revert reason using the ABI
+	if revertErr, ok := err.(interface{ ErrorData() interface{} }); ok {
+		if data := revertErr.ErrorData(); data != nil {
+			// Get the raw error data
+			errData := data.(string)
+			// Convert hex string to bytes
+			if errBytes, hexErr := hex.DecodeString(strings.TrimPrefix(errData, "0x")); hexErr == nil {
+				var errBytes4 [4]byte
+				copy(errBytes4[:], errBytes[:4])
+				if abiError, findErr := parsedABI.ErrorByID(errBytes4); findErr == nil {
+					// If there's no data to unpack (len == 4 for just the selector)
+					if len(errBytes) == 4 {
+						return fmt.Errorf("transaction reverted: %v (decoded error: %s)",
+							err, abiError.Name)
+					}
+					// Try to unpack data if available
+					if errorData, unpackErr := abiError.Unpack(errBytes[4:]); unpackErr == nil {
+						return fmt.Errorf("transaction reverted: %v (decoded error: %s%v)",
+							err, abiError.Name, errorData)
+					}
+				}
+			}
 		}
 	}
-	return out
+	return err
 }
-
-func ResolveContractAddrs(contracts *gjson.Result, args []string) []string {
-	out := []string{}
-	for _, arg := range args {
-		addr := contracts.Get(arg).String()
-		if addr != "" {
-			out = append(out, addr)
-		} else {
-			out = append(out, arg)
-		}
-	}
-	return out
-}
-
-func ResolveAccountAddrs(accounts *gjson.Result, args []string) []string {
-	out := []string{}
-	for _, arg := range args {
-		addr := accounts.Get(arg).Get("addr").String()
-		if addr != "" {
-			out = append(out, addr)
-		} else {
-			out = append(out, arg)
-		}
-	}
-	return out
-}
-
-func DownloadAvalanchego(destDir string, version string) (url string, destFile string, err error) {
-	goos := runtime.GOOS
-	goarch := runtime.GOARCH
-
-	fn := fmt.Sprintf("avalanchego-%s", version)
-	destFile = filepath.Join(destDir, fn)
-	if FileExists(destFile) {
-		return url, destFile, fmt.Errorf("file exists: %s", destFile)
-	}
-
-	tdir, err := os.MkdirTemp("", "ggt")
-	if err != nil {
-		return url, destFile, err
-	}
-	defer func() {
-		os.RemoveAll(tdir)
-	}()
-
-	var exeFile string
-	switch goos {
-	case "darwin":
-		url = fmt.Sprintf(
-			"https://github.com/ava-labs/avalanchego/releases/download/%s/avalanchego-macos-%s.zip",
-			version,
-			version,
-		)
-		// It unzips into a 'build' folder
-		exeFile = filepath.Join(tdir, "build", "avalanchego")
-	case "linux":
-		url = fmt.Sprintf(
-			"https://github.com/ava-labs/avalanchego/releases/download/%s/avalanchego-linux-%s-%s.tar.gz",
-			version,
-			goarch,
-			version,
-		)
-		exeFile = filepath.Join(tdir, fmt.Sprintf("avalanchego-%s", version), "avalanchego")
-	default:
-		return url, destFile, fmt.Errorf("downloading not supported on OS: %s", goos)
-	}
-
-	err = getter.GetAny(tdir, url)
-	if err != nil {
-		return url, destFile, err
-	}
-
-	err = CopyFile(exeFile, destFile)
-
-	return url, destFile, err
-}
-
-func DownloadSubnetevm(destDir string, version string) (url string, destFile string, err error) {
-	goarch := runtime.GOARCH
-	goos := runtime.GOOS
-	switch goos {
-	case "darwin":
-		url = fmt.Sprintf(
-			"https://github.com/ava-labs/subnet-evm/releases/download/%s/subnet-evm_%s_darwin_%s.tar.gz",
-			version,
-			version[1:],
-			goarch,
-		)
-	case "linux":
-		url = fmt.Sprintf(
-			"https://github.com/ava-labs/subnet-evm/releases/download/%s/subnet-evm_%s_linux_%s.tar.gz",
-			version,
-			version[1:],
-			goarch,
-		)
-	default:
-		return "", "", fmt.Errorf("downloading not supported on OS: %s", goos)
-	}
-
-	fn := fmt.Sprintf("subnet-evm-%s", version)
-	destFile = filepath.Join(destDir, fn)
-	if FileExists(destFile) {
-		return "", "", fmt.Errorf("file exists: %s", destFile)
-	}
-
-	tdir, err := os.MkdirTemp("", "ggt")
-	if err != nil {
-		return "", "", err
-	}
-	defer func() {
-		os.RemoveAll(tdir)
-	}()
-
-	err = getter.GetAny(tdir, url)
-	if err != nil {
-		return "", "", err
-	}
-
-	err = CopyFile(filepath.Join(tdir, "subnet-evm"), destFile)
-
-	return url, destFile, err
-}
-
-// Take control over where things are placed
-
-type DirectoryLayout struct {
-	BinDir          string
-	PluginDir       string
-	DataDir         string
-	ConfigDir       string
-	ChainConfigDir  string
-	VMConfigDir     string
-	CChainConfigDir string
-	XChainConfigDir string
-}
-
-type FileLocations struct {
-	AvaBinFile       string
-	ConfigFile       string
-	CChainConfigFile string
-	XChainConfigFile string
-	VMAliasesFile    string
-	ChainAliasesFile string
-	AvaGenesisFile   string
-}
-
-func NewDirectoryLayout(workDir string) DirectoryLayout {
-	return DirectoryLayout{
-		BinDir:          filepath.Join(workDir, "bin"),
-		PluginDir:       filepath.Join(workDir, "bin", "plugins"),
-		DataDir:         filepath.Join(workDir, "data"),
-		ConfigDir:       filepath.Join(workDir, "configs"),
-		ChainConfigDir:  filepath.Join(workDir, "configs", "chains"),
-		CChainConfigDir: filepath.Join(workDir, "configs", "chains", "C"),
-		XChainConfigDir: filepath.Join(workDir, "configs", "chains", "X"),
-		VMConfigDir:     filepath.Join(workDir, "configs", "vms"),
-	}
-}
-
-func NewFileLocations(workDir string) FileLocations {
-	return FileLocations{
-		AvaBinFile:       filepath.Join(workDir, "bin", "avalanchego"),
-		ConfigFile:       filepath.Join(workDir, "configs", "node-config.json"),
-		AvaGenesisFile:   filepath.Join(workDir, "configs", "ava-genesis.json"),
-		ChainAliasesFile: filepath.Join(workDir, "configs", "chains", "aliases.json"),
-		CChainConfigFile: filepath.Join(workDir, "configs", "chains", "C", "config.json"),
-		XChainConfigFile: filepath.Join(workDir, "configs", "chains", "X", "config.json"),
-		VMAliasesFile:    filepath.Join(workDir, "configs", "vms", "aliases.json"),
-	}
-
-}
-
-// func AvaKeyToEthKey(key *crypto.PrivateKeySECP256K1R) common.Address {
-// 	pubk := key.ToECDSA().PublicKey
-// 	addr := ethcrypto.PubkeyToAddress(pubk)
-// 	return addr
-// }
