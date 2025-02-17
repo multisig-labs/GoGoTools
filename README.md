@@ -1,16 +1,79 @@
 <h1 align="center">GoGoTools 🎈</h1>
-<p align="center">A (growing) collection of useful tools for Avalanche subnet developers.</p>
+<p align="center">A (growing) collection of useful tools for Avalanche developers.</p>
 
-GGT currently lets you quickly spin up a subnet dev environment that has avalanchego + subnet-evm + precompiles, allowing you to:
+## Usage
 
-- Make your “Time to RPC" 10x faster
-- Easily find/tweak/experiment with configs and precompiles
-- Easily create many isolated environments to test different versions of binaries
-- ... and comes with default user accounts / keys for easy startup
+<pre><code>
+Usage:
+  ggt <command> ...
+
+Commands:
+  bech32-decode            Decode a bech32 address
+  cb58-decode              Decode a value from CB58 (ID or NodeID)
+  cb58-decode-sig          Decode a signature (r,s,v) from CB58
+  cb58-encode              Encode a value to CB58
+  completion               Generate shell completion scripts
+  help                     Help about any command
+  inspect-tx-p             Inspect a P-Chain transaction
+  mnemonic-addrs           Show addresses for a BIP39 mnemonic
+  mnemonic-generate        Generate a random BIP39 mnemonic
+  mnemonic-insecure        Generate an INSECURE test BIP39 mnemonic
+  mnemonic-keys            Show keys and addresses for a BIP39 mnemonic
+  msgdigest                Generate a hash digest for an Avalanche Signed Message (ERC-191)
+  pk                       Show various address encodings of a private key
+  random-bls               Generate a random BLS key
+  random-id                Generate a random ID
+  random-nodeid            Generate a random node ID
+  rpc                      Ergonomic access to avalanche node RPC APIs
+  verify-bls               Verify a BLS Proof of Possession
+  version                  Version
+  vmid                     Given a vmName, try to encode the ASCII name as a vmID
+  vmname                   Given a vmID, try to decode the ASCII name
+  warp-construct-uptime    Construct an uptime message
+  warp-get                 Get a warp message from a transaction ID
+  warp-parse               Parse a warp message
+</code></pre>
+
+## Mnemonics
+
+Avalanche P-Chain and C-Chain use different address formats, and `ggt` provides utilities to help with this.
+
+```sh
+❯ bin/ggt mnemonic-keys "test test test test test test test test test test test junk"
+=== BIP39 Mnemonic ===
+test test test test test test test test test test test junk
+
+=== Ethereum Derivation Path ===
+Path               EVM Addr     Ava Addr           EVM Private Key      Ava Private Key
+m/44'/60'/0'/0/0   0xf39Fd6...  P-avax15428vq2...  ac0974bec39a17e3...  PrivateKey-2JmTFo8knhffGK32...
+m/44'/60'/0'/0/1   0x709979...  P-avax1cjzphr6...  59c6995e998f97a5...  PrivateKey-gYChgv9KmCAaRH47...
+m/44'/60'/0'/0/2   0x3C44Cd...  P-avax1sj3m3zu...  5de4111afa1a4b94...  PrivateKey-iMKNGkysaBKiThvd...
+m/44'/60'/0'/0/3   0x90F79b...  P-avax1y3fgnts...  7c852118294e51e6...  PrivateKey-wqhSPTuv3JB9YPix...
+m/44'/60'/0'/0/4   0x15d34A...  P-avax1jft4f7x...  47e179ec19748859...  PrivateKey-Yf6fhJUE97QgwBkb...
+m/44'/60'/0'/0/5   0x996550...  P-avax1syp9y2m...  8b3a350cf5c34c91...  PrivateKey-24KNq4HhQo5BL6xM...
+m/44'/60'/0'/0/6   0x976EA7...  P-avax1zyf8ga3...  92db14e403b83dfe...  PrivateKey-27gEa9Qudm22UaxC...
+m/44'/60'/0'/0/7   0x14dC79...  P-avax1mer4xr0...  4bbbf85ce3377467...  PrivateKey-aMXjshukTmhmsn2P...
+m/44'/60'/0'/0/8   0x23618e...  P-avax1l5rrv44...  dbda1821b80551c9...  PrivateKey-2fpphtBdokVfG6uA...
+m/44'/60'/0'/0/9   0xa0Ee7A...  P-avax14flvw0x...  2a871d0798f97d79...  PrivateKey-KjKHSmNQ9bFN3bK2...
+
+=== Avalanche Derivation Path ===
+Path               EVM Addr     Ava Addr           EVM Private Key      Ava Private Key
+m/44'/9000'/0'/0/0 0x5a299B...  P-avax1yljhuvj...  211cdc80c23ccc8e...  PrivateKey-Fapb8hTUMABpZc9z...
+m/44'/9000'/0'/0/1 0xFf9bc6...  P-avax18wvaf02...  9f8799874aeb19dc...  PrivateKey-2DFyMtm5iENeShhP...
+m/44'/9000'/0'/0/2 0x9Fa1E0...  P-avax1kk4tuwm...  9ac048b0ccc9a3d9...  PrivateKey-2B9ukB5wfRqS8vnJ...
+m/44'/9000'/0'/0/3 0x8E7046...  P-avax1au4cssw...  2119b8ec008c7599...  PrivateKey-FaWRW4Fwpy8dgPq1...
+m/44'/9000'/0'/0/4 0xA7a060...  P-avax1s8kxj6a...  edf2bd01bbd1b1c3...  PrivateKey-2oo4uTtBJfU64mB2...
+m/44'/9000'/0'/0/5 0xd667fe...  P-avax12r4ys4s...  36bc4c0b5e9b13a3...  PrivateKey-R79TRuBkoJympQD3...
+m/44'/9000'/0'/0/6 0xaEF349...  P-avax1sdn9w8t...  e8c61325266f87b6...  PrivateKey-2mWtmQ2iQxEdGwjh...
+m/44'/9000'/0'/0/7 0x8F80c9...  P-avax1hvdsp7z...  dad79f166f5359a5...  PrivateKey-2fP2rzMCgN6LvKzK...
+m/44'/9000'/0'/0/8 0x6cB771...  P-avax1935pmeg...  2b15356991756b70...  PrivateKey-KyVd5iu1CJ32Qryn...
+m/44'/9000'/0'/0/9 0x468E01...  P-avax1yj4kuns...  248c879bf5a22274...  PrivateKey-H6bSJB5xj2FbMuV9...
+
+```
 
 ## Installation
 
-Requires [Go](https://golang.org/doc/install) version >= 1.20
+Requires [Go](https://golang.org/doc/install) version >= 1.23
 
 Clone Repository
 
@@ -37,279 +100,3 @@ just build
 ```
 
 which will create the binary `bin/ggt` (Make sure you add it to your $PATH)
-
-## Usage
-
-We are still trying to find the optimal workflows for doing this kind of dev work, but this is what we have as of now. Help wanted!
-
-**Assumptions:**
-
-- You have [Foundry](https://book.getfoundry.sh/getting-started/installation) installed and `cast` in your path
-- You have a version of the `avalanchego` binary
-- You have cloned the [subnet-evm](https://github.com/ava-labs/subnet-evm) repo and have a compiled evm binary
-- You have this tool `ggt` compiled and in your $PATH
-
-### Workflow
-
-The idea is that we make a new, empty project directory, then use `ggt prepare` to create one or many `nodes`, which are basically a directory with `avalancego`, a vm binary, and a bunch of configs all setup in the right place. By default, `avalanchego` puts its files in `$HOME/.avalanchego`. **WE CHANGE THIS** behavior via command line flags to instead put all logs, db files, configs etc into the specified node directory, and organized a bit differently. The `start.sh` script starts up avalanchego with the correct command-line args.
-
-You can easily blow away a node and start over with `rm -rf <dirname>`. If you want to save off your progress just `cp` the dir to a new name.
-
-Once you have your node directory prepared, you can run it with `ggt node run <dirname>`. This will start up avalanchego in that directory. In this way its easy to have many directories, with say different binary versions of `avalanchego` and your vms, and switch between them. A caveat is that we expect only **ONE** node to be running at any one time.
-
-If you have problems with the `ggt node run` command (it's currently under heavy development) you can always run the `start.sh` script inside each node directory to get things going.
-
-### Example
-
-```sh
-# Mac
-mkdir MySubnetProject
-cd MySubnetProject
-ggt utils init v1.10.19 v0.5.11 # Downloads binaries from GitHub
-ggt node prepare NodeV1 --ava-bin=avalanchego-v1.10.19 --vm-name=subnetevm --vm-bin=subnet-evm-v0.5.11
-```
-
-If you then `prepared` another node NodeV2 with some different binary versions, you might have a directory structure that looks like this:
-
-```
-MySubnetProject
-├── NodeV1
-│   ├── bin
-│   │   ├── avalanchego -> /path/to/avalanchego-v1.9.6
-│   │   └── plugins
-│   │       └── srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy -> /path/to/subnetevm-v0.4.7
-│   ├── configs
-│   │   ├── chains
-│   │   │   ├── C
-│   │   │   │   └── config.json
-│   │   │   ├── X
-│   │   │   │   └── config.json
-│   │   │   └── aliases.json
-│   │   ├── node-config.json
-│   │   └── vms
-│   │       └── aliases.json
-│   ├── data
-│   └── start.sh
-├── NodeV2
-│   ├── bin
-│   │   ├── avalanchego -> /path/to/avalanchego-v1.9.7
-│   │   └── plugins
-│   │       └── srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy -> /path/to/subnetevm-v0.4.8
-│   ├── configs
-│   │   ├── chains
-│   │   │   ├── C
-│   │   │   │   └── config.json
-│   │   │   ├── X
-│   │   │   │   └── config.json
-│   │   │   └── aliases.json
-│   │   ├── node-config.json
-│   │   └── vms
-│   │       └── aliases.json
-│   ├── data
-│   └── start.sh
-├── README.md
-├── accounts.json
-├── contracts.json
-├── evmconfig.json
-├── node-config.json
-├── subnetevm-config.json
-└── subnetevm-genesis.json
-```
-
-(Note that the `--vm-name=subnetevm` name you supplied for your VM (which can be any name) has been converted into an Avalanche `ids.ID` `srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy` and symlinked to the vm binary you specified)
-
-Now we can start our node:
-
-```sh
-ggt node run NodeV1 (--clear-logs to delete logs before starting node)
-```
-
-This will start `avalanchego` from the `NodeV1` directory and you should see the `NodeV1/data` directory fill up with logs and data.
-
-In another terminal, lets create our subnet (the `ggt utils init` cmd we ran earlier creates a sample genesis with all precompiles enabled):
-
-```sh
-ggt wallet create-chain NodeV1 MyChain subnetevm --genesis-file subnetevm-genesis.json
-```
-
-This command assumes NodeV1 is running, and will create a new Subnet, and then inside that subnet it will create a blockchain with the name `MyChain`, using the `subnetevm` virtual machine binary we registered earlier, and using the specified genesis file.
-
-You should see an RPC URL printed to the terminal:
-
-`http://localhost:9650/ext/bc/6SPgMtm5xfZrGGLJztaByMwKGJhrw4WzhKk6nGC5yfXqiJGuT/rpc`
-
-You can now use this to issue commands to your EVM.
-
-## Info
-
-```sh
-ggt node info | jq
-```
-
-(Assuming you have [jq](https://stedolan.github.io/jq/manual/) installed, and why wouldn't you!)
-
-This collects node info from several different Avalanche API endpoints and gives you a single blob with all the data, including an `rpcs` key with the rpc url for each blockchain.
-
-```json
-{
-  "nodeID": "NodeID-5VvkgcSJoUnRruSEMm9uR7P4Wxr1hQi1q",
-  "networkID": 12345,
-  "networkName": "local",
-  "uptime": {
-    "rewardingStakePercentage": "100.0000",
-    "weightedAveragePercentage": "100.0000"
-  },
-  "getNodeVersion": {
-    "version": "avalanche/1.9.7",
-    "databaseVersion": "v1.4.5",
-    "rpcProtocolVersion": "22",
-    "gitCommit": "3e3e40f2f4658183d999807b724245023a13f5dc",
-    "vmVersions": {
-      "avm": "v1.9.7",
-      "evm": "v0.11.5",
-      "platform": "v1.9.7",
-      "subnetevm": "v0.4.8@880ec774bf5746c6c6aceb6887d08b221ed565cd"
-    }
-  },
-  "getVMs": {
-    "vms": {
-      "jvYyfQTxGMJLuGWa55kdP2p2zSUYsQ5Raupu4TW34ZAUBAbtq": ["avm"],
-      "mgj786NP7uDwBCcq6YwThhaN8FLyybkCa4zBWTQbNgmK6k9A6": ["evm"],
-      "qd2U4HDWUvMrVUeTcCHp6xH3Qpnn1XbU5MDdnBoiifFqvgXwT": ["nftfx"],
-      "rWhpuQPF1kb72esV2momhMuTYGkEb1oL29pt2EBXWmSy4kxnT": ["platform"],
-      "rXJsCSEYXg2TehWxCEEGj6JU2PWKTkd6cBdNLjoe2SpsKD9cy": ["propertyfx"],
-      "spdxUxVJQbX85MGxMHbKw1sHxMnSqJ3QBzDyDYEP3h6TLuxqQ": ["secp256k1fx"],
-      "srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy": ["subnetevm"]
-    }
-  },
-  "subnets": [
-    {
-      "id": "29uVeLPJB1eQJkzRemU8g8wZDw5uJRqpab5U2mX9euieVwiEbL",
-      "controlKeys": ["P-local18jma8ppw3nhx5r4ap8clazz0dps7rv5u00z96u"],
-      "threshold": "1"
-    },
-    {
-      "id": "11111111111111111111111111111111LpoYY",
-      "controlKeys": [],
-      "threshold": "0"
-    }
-  ],
-  "blockchains": [
-    {
-      "id": "SRq2ZdVwqyQcQqVwTtjZPTDttDWKTiUEg2vyy3AeobBjeS3z3",
-      "name": "MyChain",
-      "subnetID": "29uVeLPJB1eQJkzRemU8g8wZDw5uJRqpab5U2mX9euieVwiEbL",
-      "vmID": "srEXiWaHuhNyGwPUi444Tu47ZEDwxTWrbQiuD7FmgSAQ6X7Dy"
-    },
-    {
-      "id": "2CA6j5zYzasynPsFeNoqWkmTCt3VScMvXUZHbfDJ8k3oGzAPtU",
-      "name": "C-Chain",
-      "subnetID": "11111111111111111111111111111111LpoYY",
-      "vmID": "mgj786NP7uDwBCcq6YwThhaN8FLyybkCa4zBWTQbNgmK6k9A6"
-    },
-    {
-      "id": "2eNy1mUFdmaxXNj1eQHUe7Np4gju9sJsEtWQ4MX3ToiNKuADed",
-      "name": "X-Chain",
-      "subnetID": "11111111111111111111111111111111LpoYY",
-      "vmID": "jvYyfQTxGMJLuGWa55kdP2p2zSUYsQ5Raupu4TW34ZAUBAbtq"
-    }
-  ],
-  "aliases": {
-    "blockchainAliases": {
-      "SRq2ZdVwqyQcQqVwTtjZPTDttDWKTiUEg2vyy3AeobBjeS3z3": [
-        "SRq2ZdVwqyQcQqVwTtjZPTDttDWKTiUEg2vyy3AeobBjeS3z3"
-      ],
-      "2CA6j5zYzasynPsFeNoqWkmTCt3VScMvXUZHbfDJ8k3oGzAPtU": [
-        "C",
-        "evm",
-        "2CA6j5zYzasynPsFeNoqWkmTCt3VScMvXUZHbfDJ8k3oGzAPtU"
-      ],
-      "2eNy1mUFdmaxXNj1eQHUe7Np4gju9sJsEtWQ4MX3ToiNKuADed": [
-        "X",
-        "avm",
-        "2eNy1mUFdmaxXNj1eQHUe7Np4gju9sJsEtWQ4MX3ToiNKuADed"
-      ]
-    }
-  },
-  "rpcs": {
-    "MyChain": "http://localhost:9650/ext/bc/SRq2ZdVwqyQcQqVwTtjZPTDttDWKTiUEg2vyy3AeobBjeS3z3/rpc"
-  }
-}
-```
-
-This makes it easy to do something like this:
-
-```sh
-export ETH_RPC_URL=`ggt node info | jq -r '.rpcs.MyChain'`
-cast chain-id
-```
-
-## Block Explorer
-
-Once you have your node running, you can pop up a browser with the [Expedition](https://github.com/xops/expedition) blockchain explorer pointed at your node.
-
-```sh
-ggt node explorer MyChain
-```
-
-## Subnet EVM Precompiles
-
-The [Subnet-EVM](https://github.com/ava-labs/subnet-evm) repo has some nice example contracts you can use to interact with the default subnetevm and precompiles.
-
-However, in the interest of getting as close to the metal as possible, to really understand how things are working, `ggt` has some convenience commands that wrap the (amazing!) `cast` command from Foundry. The `ggt utils init` command creates default `accounts.json` and `contracts.json` files, that you can modify with your particular info, and we use these to make issuing `cast` commands a little more ergonomic by using those files to resolve user and contract addresses. Out of the box they come with a few users and all the default precompile contract addresses.
-
-Assuming you have your node running, and your `ETH_RPC_URL` pointing to it, you can do things like this:
-
-```sh
-# Balances of users in accounts.json
-ggt cast balances | jq
-# Send eth from one user to another
-ggt cast send-eth owner alice 1ether | jq
-# Call read-only contract methods
-ggt cast call owner TxAllowList "readAllowList(address)" bob
-ggt cast call owner FeeConfigManager "getFeeConfigLastChangedAt()"
-# Send a signed tx to a contract / method
-ggt cast send owner NativeMinter "mintNativeCoin(address,uint256)" alice 1ether | jq
-ggt cast send owner TxAllowList "setEnabled(address)" bob | jq
-ggt cast send owner TxAllowList "setNone(address)" bob | jq
-```
-
-Cast has tools to decode the output of a contract call, so for example to see the current fee configuration via the precompile we can do this:
-
-```sh
-export DATA=$(ggt cast call owner FeeConfigManager "getFeeConfig()")
-cast --abi-decode "getFeeConfig()(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)" $DATA
-
-8000000
-2
-25000000000
-50000000
-36
-0
-1000000
-200000
-```
-
-Which maps to the struct returned by the precompile
-
-```sol
-function getFeeConfig()
-    external
-    view
-    returns (
-      uint256 gasLimit,
-      uint256 targetBlockRate,
-      uint256 minBaseFee,
-      uint256 targetGas,
-      uint256 baseFeeChangeDenominator,
-      uint256 minBlockGasCost,
-      uint256 maxBlockGasCost,
-      uint256 blockGasCostStep
-    );
-```
-
-<hr />
-
-# 🚀 LFGG 🚀
-
-This is version 0.01 of this tool, and we plan on making it so useful that it will be a core part of every Avalanche developer's toolbox. We welcome any and all idea / contributions on how to make the experience better.

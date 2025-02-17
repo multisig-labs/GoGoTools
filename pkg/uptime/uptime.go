@@ -6,7 +6,7 @@ import (
 	"net/url"
 
 	"github.com/ava-labs/avalanchego/utils/rpc"
-	types "github.com/ava-labs/subnet-evm/plugin/evm"
+	"github.com/ava-labs/subnet-evm/plugin/evm/client"
 )
 
 type Client struct {
@@ -31,14 +31,14 @@ func NewClient(validatorsURL string) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) GetCurrentValidators(ctx context.Context, options ...rpc.Option) ([]types.CurrentValidator, error) {
-	res := &types.GetCurrentValidatorsResponse{}
+func (c *Client) GetCurrentValidators(ctx context.Context, options ...rpc.Option) ([]client.CurrentValidator, error) {
+	res := &client.GetCurrentValidatorsResponse{}
 
 	for key := range c.queryParams {
 		options = append(options, rpc.WithQueryParam(key, c.queryParams.Get(key)))
 	}
 
-	err := c.validatorsRequester.SendRequest(ctx, "validators.getCurrentValidators", &types.GetCurrentValidatorsRequest{}, res, options...)
+	err := c.validatorsRequester.SendRequest(ctx, "validators.getCurrentValidators", &client.GetCurrentValidatorsRequest{}, res, options...)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching from %s: %w", c.validatorsUrl, err)
 	}
