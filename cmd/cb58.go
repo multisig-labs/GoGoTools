@@ -32,7 +32,7 @@ func cb58DecodeCmd() {
 	strippedValue := strings.TrimPrefix(args.Value, "NodeID-")
 	b, err := cb58.Decode(strippedValue)
 	checkErr(err)
-	fmt.Printf("%x\n", b)
+	fmt.Printf("0x%x\n", b)
 }
 
 func cb58DecodeSigCmd() {

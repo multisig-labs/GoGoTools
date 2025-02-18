@@ -71,6 +71,16 @@ m/44'/9000'/0'/0/9 0x468E01...  P-avax1yj4kuns...  248c879bf5a22274...  PrivateK
 
 ```
 
+## Warp
+
+```sh
+❯ ggt warp-get 0xdc65ce82bccd7e5c49e281d26b7370d5fe49b69f2011e6cdd96da76cfb161597
+
+WarpMessage(UnsignedMessage(NetworkID = 1, SourceChainID = 2q9e4r6Mu3U68nU1fYjgbR6JvwrRx36CohpAX5UQxse55x1Q5, Payload = 000000000001000000141424aef0d5272373beb69b2a860bd1da078df67f000000b60000000000010ad6355dc6b82cd375e3914badb3e2f8d907d0856f8e679b2db46f8938a2f01200000014000000000000000000000e8bd2300dfc723e53d38d543b279b9bd69c5b6754a09bce1eab2de2d9135eff7e391e42583fca4c19c6007e864971c2baba777dfa312ca7994e0000000067b3bc6900000001000000016cc54e2d13e91e29867851238a8af6c53ca4a9bf00000001000000016cc54e2d13e91e29867851238a8af6c53ca4a9bf0000000000000002), %!s(<nil>))
+
+Payload (*message.RegisterL1Validator): {"subnetID":"5moznRzaAEhzWkNTQVdT1U4Kb9EU7dbsKZQNmHwtN5MGVQRyT","nodeID":"0x000000000000000000000e8bd2300dfc723e53d3","blsPublicKey":[141,84,59,39,155,155,214,156,91,103,84,160,155,206,30,171,45,226,217,19,94,255,126,57,30,66,88,63,202,76,25,198,0,126,134,73,113,194,186,186,119,125,250,49,44,167,153,78],"expiry":1739832425,"remainingBalanceOwner":{"threshold":1,"addresses":["Av8LjfDcLx8fkrvk7jevKQ3RWdZ8Qp4AQ"]},"disableOwner":{"threshold":1,"addresses":["Av8LjfDcLx8fkrvk7jevKQ3RWdZ8Qp4AQ"]},"weight":2}
+```
+
 ## Installation
 
 Requires [Go](https://golang.org/doc/install) version >= 1.23

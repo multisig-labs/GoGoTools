@@ -112,12 +112,18 @@ func ParsePrivateKeyToAddresses(privateKeyStr string, network string) (string, s
 }
 
 func ValidateBLSKeys(blsPubKey string, blsPop string) error {
-	if _, err := bls.PublicKeyFromCompressedBytes(HexToBytes(blsPubKey)); err != nil {
+	publicKey, err := bls.PublicKeyFromCompressedBytes(HexToBytes(blsPubKey))
+	if err != nil {
 		return fmt.Errorf("error decoding blsPubKey %s: %w", blsPubKey, err)
 	}
-	if _, err := bls.SignatureFromBytes(HexToBytes(blsPop)); err != nil {
+	signature, err := bls.SignatureFromBytes(HexToBytes(blsPop))
+	if err != nil {
 		return fmt.Errorf("error decoding blsPop %s: %w", blsPop, err)
 	}
+	if !bls.VerifyProofOfPossession(publicKey, signature, HexToBytes(blsPubKey)) {
+		return fmt.Errorf("invalid proof of possession")
+	}
+
 	return nil
 }
 

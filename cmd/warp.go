@@ -33,12 +33,18 @@ func getWarpMsgCmd() {
 
 	c, err := ethclient.Dial(args.EthUrl)
 	checkErr(err)
+
 	receipt, err := c.TransactionReceipt(context.Background(), txid)
 	checkErr(err)
+
 	uwm, err := warpMessageFromLogs(receipt.Logs)
 	checkErr(err)
+
 	wm := &warp.Message{UnsignedMessage: *uwm}
-	fmt.Printf("\n%+v\n", wm)
+	payloadType, payload, err := parsePayload(wm.Payload)
+	checkErr(err)
+
+	fmt.Printf("\n%+v\n\nPayload (%s): %s\n", wm, payloadType, payload)
 }
 
 func constructUptimeMsgCmd() {
@@ -161,6 +167,11 @@ func parsePayload(msg []byte) (string, []byte, error) {
 			return "", nil, err
 		}
 	case *message.L1ValidatorRegistration:
+		out, err = json.Marshal(payload)
+		if err != nil {
+			return "", nil, err
+		}
+	case *message.L1ValidatorWeight:
 		out, err = json.Marshal(payload)
 		if err != nil {
 			return "", nil, err
