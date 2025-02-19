@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/constants"
@@ -14,16 +13,18 @@ import (
 	"github.com/ava-labs/avalanchego/vms/platformvm/warp/payload"
 	"github.com/ava-labs/subnet-evm/core/types"
 	"github.com/ava-labs/subnet-evm/ethclient"
-	subnetEvmWarp "github.com/ava-labs/subnet-evm/precompile/contracts/warp"
-	warpmessages "github.com/ava-labs/subnet-evm/warp/messages"
+	subnetevmwarp "github.com/ava-labs/subnet-evm/precompile/contracts/warp"
+	subnetevmmessages "github.com/ava-labs/subnet-evm/warp/messages"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/jxskiss/mcli"
+	"github.com/multisig-labs/gogotools/pkg/sigagg"
+	"github.com/multisig-labs/gogotools/pkg/utils"
 )
 
 func getWarpMsgCmd() {
 	args := struct {
-		TxID string `cli:"txid, Transaction ID"`
+		TxID string `cli:"#R, txid, Transaction ID"`
 
 		URLFlags
 	}{}
@@ -49,10 +50,10 @@ func getWarpMsgCmd() {
 
 func constructUptimeMsgCmd() {
 	args := struct {
-		Network       string `cli:"network, Network (mainnet, fuji, etc)"`
-		BlockchainID  string `cli:"blockchainID, Blockchain ID"`
-		ValidationID  string `cli:"validationID, Validation ID"`
-		UptimeSeconds string `cli:"uptimeSeconds, Uptime Seconds"`
+		Network       string `cli:"#R, -n,   --network, Network (mainnet, fuji, etc)"`
+		BlockchainID  string `cli:"#R, -b,   --blockchain, Blockchain ID"`
+		ValidationID  string `cli:"#R, -v,   --validation, Validation ID"`
+		UptimeSeconds string `cli:"#R, -t,   --uptime, Uptime Seconds"`
 	}{}
 	mcli.MustParse(&args)
 
@@ -64,7 +65,7 @@ func constructUptimeMsgCmd() {
 	checkErr(err)
 	uptimeSeconds, err := strconv.ParseUint(args.UptimeSeconds, 10, 64)
 	checkErr(err)
-	uptimePayload, err := warpmessages.NewValidatorUptime(validationID, uptimeSeconds)
+	uptimePayload, err := subnetevmmessages.NewValidatorUptime(validationID, uptimeSeconds)
 	checkErr(err)
 	addressedCall, err := payload.NewAddressedCall(nil, uptimePayload.Bytes())
 	checkErr(err)
@@ -74,7 +75,8 @@ func constructUptimeMsgCmd() {
 		addressedCall.Bytes(),
 	)
 	checkErr(err)
-	fmt.Printf("\n%s\n", hexutil.Encode(uptimeProofUnsignedMessage.Bytes()))
+
+	fmt.Println(utils.BytesToHex(uptimeProofUnsignedMessage.Bytes()))
 }
 
 func parseWarpMsgCmd() {
@@ -84,7 +86,7 @@ func parseWarpMsgCmd() {
 	mcli.MustParse(&args)
 
 	m, err := parseWarpMessage(args.WarpMsg)
-	if err != nil && strings.Contains(err.Error(), "insufficient length") {
+	if err != nil {
 		um, err := parseUnsignedWarpMessage(args.WarpMsg)
 		checkErr(err)
 		m = &warp.Message{UnsignedMessage: *um}
@@ -96,6 +98,30 @@ func parseWarpMsgCmd() {
 	checkErr(err)
 
 	fmt.Printf("\n%+v\n\nPayload (%s): %s\n", m, payloadType, payload)
+}
+
+func aggregateSignaturesCmd() {
+	args := struct {
+		Msg string `cli:"#R, msg, Warp Message"`
+		URL string `cli:"#R, --url, Glacier URL" default:"https://glacier-api.avax.network/v1/signatureAggregator/mainnet/aggregateSignatures"`
+		Hex bool   `cli:"--hex, Output as hex"`
+	}{}
+	mcli.MustParse(&args)
+
+	msg, err := parseUnsignedWarpMessage(args.Msg)
+	checkErr(err)
+
+	c, err := sigagg.NewClient(args.URL)
+	checkErr(err)
+
+	msgSigned, err := c.AggregateSignatures(msg, ids.ID{}, nil)
+	checkErr(err)
+
+	if args.Hex {
+		fmt.Println(utils.BytesToHex(msgSigned.Bytes()))
+	} else {
+		fmt.Printf("\n%+v\n\nHex: %s\n", msgSigned, utils.BytesToHex(msgSigned.Bytes()))
+	}
 }
 
 func parseWarpMessage(msgHex string) (*warp.Message, error) {
@@ -143,7 +169,7 @@ func warpMessageFromLogs(logs []*types.Log) (*warp.UnsignedMessage, error) {
 }
 
 func parseSendWarpMessage(log types.Log) (*warp.UnsignedMessage, error) {
-	return subnetEvmWarp.UnpackSendWarpEventDataToMessage(log.Data)
+	return subnetevmwarp.UnpackSendWarpEventDataToMessage(log.Data)
 }
 
 // Returns json of the decoded payload
@@ -155,7 +181,7 @@ func parsePayload(msg []byte) (string, []byte, error) {
 
 	payloadIntf, err := message.Parse(addressedCall.Payload)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to parse payload: %w", err)
+		return parseSubnetEvmPayload(addressedCall.Payload)
 	}
 
 	var out []byte
@@ -176,6 +202,27 @@ func parsePayload(msg []byte) (string, []byte, error) {
 		if err != nil {
 			return "", nil, err
 		}
+	default:
+		return "", nil, fmt.Errorf("unknown type: %T", payload)
+	}
+
+	return fmt.Sprintf("%T", payloadIntf), out, nil
+}
+
+func parseSubnetEvmPayload(payload []byte) (string, []byte, error) {
+	payloadIntf, err := subnetevmmessages.Parse(payload)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to parse payload: %w", err)
+	}
+
+	var out []byte
+	switch payload := payloadIntf.(type) {
+	case *subnetevmmessages.ValidatorUptime:
+		out, err = json.Marshal(payload)
+		if err != nil {
+			return "", nil, err
+		}
+
 	default:
 		return "", nil, fmt.Errorf("unknown type: %T", payload)
 	}

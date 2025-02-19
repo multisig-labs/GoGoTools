@@ -5,6 +5,7 @@ import (
 
 	"github.com/multisig-labs/gogotools/pkg/utils"
 	"github.com/tidwall/sjson"
+	"github.com/tyler-smith/go-bip39"
 )
 
 func randomIDCmd() {
@@ -31,4 +32,11 @@ func randomBLSCmd() {
 	checkErr(err)
 
 	fmt.Println(string(out))
+}
+
+func randomMnemonicCmd() {
+	entropy, _ := bip39.NewEntropy(256)
+	phrase, _ := bip39.NewMnemonic(entropy)
+
+	fmt.Println(phrase)
 }

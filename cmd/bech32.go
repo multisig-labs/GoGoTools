@@ -10,7 +10,7 @@ import (
 
 func bech32DecodeCmd() {
 	args := struct {
-		Value string `cli:"#R,value, bech32 address to decode to bytes"`
+		Value string `cli:"#R, value, bech32 address to decode to bytes"`
 	}{}
 	mcli.MustParse(&args)
 

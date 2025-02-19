@@ -9,8 +9,8 @@ import (
 
 func verifyBLSCmd() {
 	args := struct {
-		PublicKey string `cli:"#R, --bls-pubkey, Public key to verify"`
-		Signature string `cli:"#R, --bls-pop, Proof of Posession signature to verify"`
+		PublicKey string `cli:"#R, --pubkey, Public key to verify"`
+		Signature string `cli:"#R, --pop, Proof of Posession signature to verify"`
 	}{}
 	mcli.MustParse(&args)
 

@@ -12,7 +12,7 @@ import (
 func mnemonicKeysCmd() {
 	args := struct {
 		Mnemonic string `cli:"#R, mnemonic, BIP39 mnemonic"`
-		Hrp      string `cli:"--hrp, hrp, Human-readable part (default: avax)" default:"avax"`
+		Hrp      string `cli:"--hrp, hrp, Human-readable part (avax, fuji, local, etc)" default:"avax"`
 		NumKeys  int    `cli:"--num-keys, num-keys, Number of keys to generate" default:"10"`
 	}{}
 	mcli.MustParse(&args)

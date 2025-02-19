@@ -13,7 +13,7 @@ import (
 
 func inspectPTxCmd() {
 	args := struct {
-		Tx string `cli:"tx, Transaction to inspect (hex or base64)"`
+		Tx string `cli:"#R, tx, Transaction to inspect (hex or base64)"`
 	}{}
 	mcli.MustParse(&args)
 
