@@ -3,7 +3,7 @@ name: build
 on:
   push:
     tags:
-      - "*"
+      - '*'
 jobs:
   xgo:
     runs-on: ubuntu-latest
@@ -18,7 +18,7 @@ jobs:
         uses: crazy-max/ghaction-xgo@v2
         with:
           xgo_version: latest
-          go_version: "1.20"
+          go_version: '1.20'
           dest: build
           prefix: ggt
           targets: ${{ matrix.os }}/${{ matrix.arch }}

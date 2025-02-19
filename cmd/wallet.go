@@ -23,7 +23,7 @@ import (
 
 func balanceAddressCmd() {
 	args := struct {
-		Address string `cli:"#R, address, Address"`
+		Address string `cli:"#R, address, P-Chain or C-Chain address" env:"ETH_FROM"`
 		Raw     bool   `cli:"--raw, raw, Output raw balance with no conversions"`
 		URLFlags
 	}{}
@@ -42,9 +42,10 @@ func balanceAddressCmd() {
 			fmt.Printf("%.18f ETH\n", amt)
 		}
 	} else {
-		addr, err := address.ParseToID(args.Address)
+		_, addrBytes, err := address.ParseBech32(strings.TrimPrefix(args.Address, "P-"))
 		checkErr(err)
-
+		addr, err := ids.ToShortID(addrBytes)
+		checkErr(err)
 		balance, err := getPBalance(context.Background(), args.AvaUrl, addr)
 		checkErr(err)
 

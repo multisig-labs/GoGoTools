@@ -25,7 +25,7 @@ import (
 func getWarpMsgCmd() {
 	args := struct {
 		TxID string `cli:"#R, txid, Transaction ID"`
-
+		Hex  bool   `cli:"--hex, Output as hex"`
 		URLFlags
 	}{}
 	mcli.MustParse(&args)
@@ -41,11 +41,14 @@ func getWarpMsgCmd() {
 	uwm, err := warpMessageFromLogs(receipt.Logs)
 	checkErr(err)
 
-	wm := &warp.Message{UnsignedMessage: *uwm}
-	payloadType, payload, err := parsePayload(wm.Payload)
+	payloadType, payload, err := parsePayload(uwm.Payload)
 	checkErr(err)
 
-	fmt.Printf("\n%+v\n\nPayload (%s): %s\n", wm, payloadType, payload)
+	if args.Hex {
+		fmt.Println(utils.BytesToHex(uwm.Bytes()))
+	} else {
+		fmt.Printf("\n%+v\n\nPayload (%s): %s\n", uwm, payloadType, payload)
+	}
 }
 
 func constructUptimeMsgCmd() {
@@ -188,7 +191,7 @@ func parsePayload(msg []byte) (string, []byte, error) {
 
 	switch payload := payloadIntf.(type) {
 	case *message.RegisterL1Validator:
-		out, err = json.Marshal(payload)
+		out, err = utils.RegisterL1ValidatorToJSON(payload)
 		if err != nil {
 			return "", nil, err
 		}

@@ -8,30 +8,34 @@ Usage:
   ggt <command> ...
 
 Commands:
-  bech32-decode            Decode a bech32 address
-  cb58-decode              Decode a value from CB58 (ID or NodeID)
-  cb58-decode-sig          Decode a signature (r,s,v) from CB58
-  cb58-encode              Encode a value to CB58
-  completion               Generate shell completion scripts
-  help                     Help about any command
-  inspect-tx-p             Inspect a P-Chain transaction
-  mnemonic-addrs           Show addresses for a BIP39 mnemonic
-  mnemonic-generate        Generate a random BIP39 mnemonic
-  mnemonic-insecure        Generate an INSECURE test BIP39 mnemonic
-  mnemonic-keys            Show keys and addresses for a BIP39 mnemonic
-  msgdigest                Generate a hash digest for an Avalanche Signed Message (ERC-191)
-  pk                       Show various address encodings of a private key
-  random-bls               Generate a random BLS key
-  random-id                Generate a random ID
-  random-nodeid            Generate a random node ID
-  rpc                      Ergonomic access to avalanche node RPC APIs
-  verify-bls               Verify a BLS Proof of Possession
-  version                  Version
-  vmid                     Given a vmName, try to encode the ASCII name as a vmID
-  vmname                   Given a vmID, try to decode the ASCII name
-  warp-construct-uptime    Construct an uptime message
-  warp-get                 Get a warp message from a transaction ID
-  warp-parse               Parse a warp message
+  balance                      Get the balance of an address
+  balance-pk                   Get the balance of an address for a private key
+  bech32-decode                Decode a bech32 address
+  cb58-decode                  Decode a value from CB58 (ID or NodeID)
+  cb58-decode-sig              Decode a signature (r,s,v) from CB58
+  cb58-encode                  Encode a value to CB58
+  completion                   Generate shell completion scripts
+  help                         Help about any command
+  inspect-tx-p                 Inspect a P-Chain transaction
+  l1-validators                Get current validators from a L1 validator RPC endpoint
+  mnemonic-addrs               Show addresses for a BIP39 mnemonic
+  mnemonic-generate            Generate a random BIP39 mnemonic
+  mnemonic-insecure            Generate an INSECURE test BIP39 mnemonic
+  mnemonic-keys                Show keys and addresses for a BIP39 mnemonic
+  msgdigest                    Generate a hash digest for an Avalanche Signed Message (ERC-191)
+  pk                           Show various address encodings of a private key
+  random-bls                   Generate a random BLS key
+  random-id                    Generate a random ID
+  random-nodeid                Generate a random node ID
+  rpc                          Ergonomic access to avalanche node RPC APIs
+  verify-bls                   Verify a BLS Proof of Possession
+  version                      Version
+  vmid                         Given a vmName, try to encode the ASCII name as a vmID
+  vmname                       Given a vmID, try to decode the ASCII name
+  warp-aggregate-signatures    Aggregate signatures for a warp message
+  warp-construct-uptime        Construct an uptime message
+  warp-get                     Get a warp message from a transaction ID
+  warp-parse                   Parse a warp message
 </code></pre>
 
 ## Mnemonics
@@ -39,7 +43,7 @@ Commands:
 Avalanche P-Chain and C-Chain use different address formats, and `ggt` provides utilities to help with this.
 
 ```sh
-❯ bin/ggt mnemonic-keys "test test test test test test test test test test test junk"
+❯ ggt mnemonic-keys "test test test test test test test test test test test junk"
 === BIP39 Mnemonic ===
 test test test test test test test test test test test junk
 
@@ -69,16 +73,89 @@ m/44'/9000'/0'/0/7 0x8F80c9...  P-avax1hvdsp7z...  dad79f166f5359a5...  PrivateK
 m/44'/9000'/0'/0/8 0x6cB771...  P-avax1935pmeg...  2b15356991756b70...  PrivateKey-KyVd5iu1CJ32Qryn...
 m/44'/9000'/0'/0/9 0x468E01...  P-avax1yj4kuns...  248c879bf5a22274...  PrivateKey-H6bSJB5xj2FbMuV9...
 
+# Show various address encodings of a private key
+❯ ggt pk PrivateKey-Fapb8hTUMABpZc9zWurmPR7why34LQNshss5RZHgCAgiY5n83
+
+PrivKey Hex:   0x211cdc80c23ccc8eceab5d6903312391e656366a7a553e2c501b06add1729816
+PrivKey CB58:  PrivateKey-Fapb8hTUMABpZc9zWurmPR7why34LQNshss5RZHgCAgiY5n83
+Eth addr:      0x5a299B0010BAc9c0339B6EF600B1f2943131b1e7
+Ava addr:      P-avax1yljhuvjkmtu0y5ls6kf4exsdd8gea9mp8jd32r
+Ava addr:      P-fuji1yljhuvjkmtu0y5ls6kf4exsdd8gea9mptqfwxu
+Ava addr:      P-local1yljhuvjkmtu0y5ls6kf4exsdd8gea9mp7pshft
+
+❯ ggt pk 0x211cdc80c23ccc8eceab5d6903312391e656366a7a553e2c501b06add1729816
+
+PrivKey Hex:   0x211cdc80c23ccc8eceab5d6903312391e656366a7a553e2c501b06add1729816
+PrivKey CB58:  PrivateKey-Fapb8hTUMABpZc9zWurmPR7why34LQNshss5RZHgCAgiY5n83
+Eth addr:      0x5a299B0010BAc9c0339B6EF600B1f2943131b1e7
+Ava addr:      P-avax1yljhuvjkmtu0y5ls6kf4exsdd8gea9mp8jd32r
+Ava addr:      P-fuji1yljhuvjkmtu0y5ls6kf4exsdd8gea9mptqfwxu
+Ava addr:      P-local1yljhuvjkmtu0y5ls6kf4exsdd8gea9mp7pshft
+
 ```
 
 ## Warp
 
 ```sh
-❯ ggt warp-get 0xdc65ce82bccd7e5c49e281d26b7370d5fe49b69f2011e6cdd96da76cfb161597
+# Set up some env vars for convenience
+export ETH_RPC_URL=https://api.avax.network/ext/bc/C/rpc
+export AVA_RPC_URL=https://api.avax.network
 
-WarpMessage(UnsignedMessage(NetworkID = 1, SourceChainID = 2q9e4r6Mu3U68nU1fYjgbR6JvwrRx36CohpAX5UQxse55x1Q5, Payload = 000000000001000000141424aef0d5272373beb69b2a860bd1da078df67f000000b60000000000010ad6355dc6b82cd375e3914badb3e2f8d907d0856f8e679b2db46f8938a2f01200000014000000000000000000000e8bd2300dfc723e53d38d543b279b9bd69c5b6754a09bce1eab2de2d9135eff7e391e42583fca4c19c6007e864971c2baba777dfa312ca7994e0000000067b3bc6900000001000000016cc54e2d13e91e29867851238a8af6c53ca4a9bf00000001000000016cc54e2d13e91e29867851238a8af6c53ca4a9bf0000000000000002), %!s(<nil>))
+# Get a warp message from a transaction ID
+❯ ggt warp-get 0x7b0a220154bde7cb8e603dd5b88d418c55fadf10d09f6e43c399f94088f83bca
 
-Payload (*message.RegisterL1Validator): {"subnetID":"5moznRzaAEhzWkNTQVdT1U4Kb9EU7dbsKZQNmHwtN5MGVQRyT","nodeID":"0x000000000000000000000e8bd2300dfc723e53d3","blsPublicKey":[141,84,59,39,155,155,214,156,91,103,84,160,155,206,30,171,45,226,217,19,94,255,126,57,30,66,88,63,202,76,25,198,0,126,134,73,113,194,186,186,119,125,250,49,44,167,153,78],"expiry":1739832425,"remainingBalanceOwner":{"threshold":1,"addresses":["Av8LjfDcLx8fkrvk7jevKQ3RWdZ8Qp4AQ"]},"disableOwner":{"threshold":1,"addresses":["Av8LjfDcLx8fkrvk7jevKQ3RWdZ8Qp4AQ"]},"weight":2}
+UnsignedMessage(NetworkID = 1, SourceChainID = 2q9e4r6Mu3U68nU1fYjgbR6JvwrRx36CohpAX5UQxse55x1Q5, Payload = 000000000001000000141424aef0d5272373beb69b2a860bd1da078df67f000000b60000000000010ad6355dc6b82cd375e3914badb3e2f8d907d0856f8e679b2db46f8938a2f01200000014000000000000000000000e8bd2300dfc723e53d38d543b279b9bd69c5b6754a09bce1eab2de2d9135eff7e391e42583fca4c19c6007e864971c2baba777dfa312ca7994e0000000067b3d5bf00000001000000016cc54e2d13e91e29867851238a8af6c53ca4a9bf00000001000000016cc54e2d13e91e29867851238a8af6c53ca4a9bf0000000000000002)
+
+Payload (*message.RegisterL1Validator): {
+  "subnetID": "5moznRzaAEhzWkNTQVdT1U4Kb9EU7dbsKZQNmHwtN5MGVQRyT",
+  "nodeID": "NodeID-11111111116MAZMYBTpRxmWciKx4L",
+  "blsPublicKey": "8d543b279b9bd69c5b6754a09bce1eab2de2d9135eff7e391e42583fca4c19c6007e864971c2baba777dfa312ca7994e",
+  "expiry": 1739838911,
+  "remainingBalanceOwner": {
+    "threshold": 1,
+    "addresses": [
+      "P-avax1dnz5utgnay0znpnc2y3c4zhkc572f2dlkwapg8"
+    ]
+  },
+  "disableOwner": {
+    "threshold": 1,
+    "addresses": [
+      "P-avax1dnz5utgnay0znpnc2y3c4zhkc572f2dlkwapg8"
+    ]
+  },
+  "weight": 2
+}
+
+
+# Parse a hex-encoded warp message
+❯ ggt warp-parse 0x0000000000010000000000000000000000000000000000000000000000000000000000000000000000350000000000010000000000000027000000000002ffa2cb7c97396dc67fc06e9f4dbf03a667f671c5cadaf55d11251d3172d2662501
+
+WarpMessage(UnsignedMessage(NetworkID = 1, SourceChainID = 11111111111111111111111111111111LpoYY, Payload = 0000000000010000000000000027000000000002ffa2cb7c97396dc67fc06e9f4dbf03a667f671c5cadaf55d11251d3172d2662501))
+
+Payload (*message.L1ValidatorRegistration): {"validationID":"2wasqFU3CptbuuWgJg5awBJHar9bm1ANwp123rFSUQJ8txiQmJ","registered":true}
+```
+
+## Balances
+
+```sh
+❯ ggt balance 0x746189b6b6C2162C6BeAB83d4dB76f8C96A5381C
+0.207649043134145176 ETH
+
+❯ ggt balance avax19zfygxaf59stehzedhxjesads0p5jdvfeedal0
+13.164163522 AVAX
+
+# If ETH_FROM is set,
+❯ ggt balance
+0.207649043134145176 ETH
+
+
+❯ export PRIVATE_KEY=010101...
+❯ ggt balance-pk
+0.2076490431 ETH   0x746189b6b6C2162C6BeAB83d4dB76f8C96A5381C
+13.164163522 AVAX  avax19zfygxaf59stehzedhxjesads0p5jdvfeedal0
+
+
+
 ```
 
 ## Installation

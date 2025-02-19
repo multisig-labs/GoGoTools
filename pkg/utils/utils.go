@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/ecdsa"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"github.com/ava-labs/avalanchego/utils/crypto/bls"
 	"github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
+	"github.com/ava-labs/avalanchego/vms/platformvm/warp/message"
 	"github.com/ava-labs/coreth/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -208,4 +210,54 @@ func DecodeError(abiStr string, err error) error {
 		}
 	}
 	return err
+}
+
+// Better JSON output for RegisterL1Validator
+func RegisterL1ValidatorToJSON(m *message.RegisterL1Validator) ([]byte, error) {
+
+	type pChainOwner struct {
+		Threshold uint32   `serialize:"true" json:"threshold"`
+		Addresses []string `serialize:"true" json:"addresses"`
+	}
+
+	rbOwners := []string{}
+	dbOwners := []string{}
+	for _, owner := range m.RemainingBalanceOwner.Addresses {
+		addr, _ := address.Format("P", "avax", owner.Bytes())
+		rbOwners = append(rbOwners, addr)
+	}
+	for _, owner := range m.DisableOwner.Addresses {
+		addr, _ := address.Format("P", "avax", owner.Bytes())
+		dbOwners = append(dbOwners, addr)
+	}
+
+	rv := struct {
+		SubnetID              ids.ID      `serialize:"true" json:"subnetID"`
+		NodeID                ids.NodeID  `serialize:"true" json:"nodeID"`
+		BLSPublicKey          string      `serialize:"true" json:"blsPublicKey"`
+		Expiry                uint64      `serialize:"true" json:"expiry"`
+		RemainingBalanceOwner pChainOwner `serialize:"true" json:"remainingBalanceOwner"`
+		DisableOwner          pChainOwner `serialize:"true" json:"disableOwner"`
+		Weight                uint64      `serialize:"true" json:"weight"`
+	}{
+		SubnetID:     m.SubnetID,
+		NodeID:       ids.NodeID(m.NodeID),
+		BLSPublicKey: hex.EncodeToString(m.BLSPublicKey[:]),
+		Expiry:       m.Expiry,
+		RemainingBalanceOwner: pChainOwner{
+			Threshold: m.RemainingBalanceOwner.Threshold,
+			Addresses: rbOwners,
+		},
+		DisableOwner: pChainOwner{
+			Threshold: m.DisableOwner.Threshold,
+			Addresses: dbOwners,
+		},
+		Weight: m.Weight,
+	}
+
+	jsonBytes, err := json.MarshalIndent(rv, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	return jsonBytes, nil
 }
