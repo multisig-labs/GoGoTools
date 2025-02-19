@@ -16,6 +16,8 @@ type URLFlags struct {
 func main() {
 	defer version.PanicHandler()
 	// mcli.SetOptions(mcli.Options{KeepCommandOrder: true})
+	mcli.Add("balance", balanceAddressCmd, "Get the balance of an address")
+	mcli.Add("balance-pk", balancePKCmd, "Get the balance of an address for a private key")
 	mcli.Add("bech32-decode", bech32DecodeCmd, "Decode a bech32 address")
 	mcli.Add("cb58-encode", cb58EncodeCmd, "Encode a value to CB58")
 	mcli.Add("cb58-decode", cb58DecodeCmd, "Decode a value from CB58 (ID or NodeID)")
