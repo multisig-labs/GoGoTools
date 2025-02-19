@@ -25,8 +25,11 @@ jobs:
           buildmode: default
           trimpath: true
           pkg: cmd/*
-      - name: Archive build artifacts
-        uses: actions/upload-artifact@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: build-artifacts
-          path: build/ggt-${{ matrix.os }}-${{ matrix.arch }}*
+          files: |
+            build/ggt-windows-amd64*
+            build/ggt-linux-amd64*
+            build/ggt-linux-arm64*
+            build/ggt-darwin-arm64*
