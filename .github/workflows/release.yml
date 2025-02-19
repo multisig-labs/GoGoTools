@@ -7,28 +7,24 @@ on:
 jobs:
   xgo:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        os: [linux, darwin]
-        arch: [amd64, arm64]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Build
-        uses: crazy-max/ghaction-xgo@v2
+        uses: crazy-max/ghaction-xgo@v3
         with:
           xgo_version: latest
-          go_version: '1.20'
+          go_version: '1.23'
           dest: build
           prefix: ggt
-          targets: ${{ matrix.os }}/${{ matrix.arch }}
+          targets: windows/amd64,linux/amd64,linux/arm64,darwin/arm64
           v: true
           x: false
           race: false
           ldflags: -s -w
           buildmode: default
           trimpath: true
-          pkg: main.go
+          pkg: cmd/main.go
       - name: Archive build artifacts
         uses: actions/upload-artifact@v4
         with:
