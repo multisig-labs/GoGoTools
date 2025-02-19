@@ -23,6 +23,7 @@ func main() {
 	mcli.Add("msgdigest", digestAvaMsgCmd, "Generate a hash digest for an Avalanche Signed Message (ERC-191)")
 	mcli.Add("pk", privkeyCmd, "Show various address encodings of a private key")
 	mcli.Add("rpc", rpcCmd, "Ergonomic access to avalanche node RPC APIs")
+	mcli.Add("l1-validators", l1ValidatorsCmd, "Get current validators from a L1 validator RPC endpoint")
 	mcli.Add("mnemonic-addrs", mnemonicAddrsCmd, "Show addresses for a BIP39 mnemonic")
 	mcli.Add("mnemonic-keys", mnemonicKeysCmd, "Show keys and addresses for a BIP39 mnemonic")
 	mcli.Add("mnemonic-generate", randomMnemonicCmd, "Generate a random BIP39 mnemonic")
