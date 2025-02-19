@@ -24,7 +24,7 @@ jobs:
           ldflags: -s -w
           buildmode: default
           trimpath: true
-          pkg: cmd/main.go
+          pkg: cmd/*
       - name: Archive build artifacts
         uses: actions/upload-artifact@v4
         with:
