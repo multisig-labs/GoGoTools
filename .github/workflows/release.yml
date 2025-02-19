@@ -30,7 +30,7 @@ jobs:
           trimpath: true
           pkg: main.go
       - name: Archive build artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: build/ggt-${{ matrix.os }}-${{ matrix.arch }}*
