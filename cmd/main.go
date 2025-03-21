@@ -22,6 +22,7 @@ func main() {
 	mcli.Add("cb58-encode", cb58EncodeCmd, "Encode a value to CB58")
 	mcli.Add("cb58-decode", cb58DecodeCmd, "Decode a value from CB58 (ID or NodeID)")
 	mcli.Add("cb58-decodesig", cb58DecodeSigCmd, "Decode a signature (r,s,v) from CB58")
+	mcli.Add("cross-chain-tx", crossChainTransferCmd, "Transfer assets from C-Chain to P-Chain")
 	mcli.Add("msgdigest", digestAvaMsgCmd, "Generate a hash digest for an Avalanche Signed Message (ERC-191)")
 	mcli.Add("pk", privkeyCmd, "Show various address encodings of a private key")
 	mcli.Add("rpc", rpcCmd, "Ergonomic access to avalanche node RPC APIs")

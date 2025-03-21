@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"strconv"
 	"strings"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/utils/set"
+	"github.com/ava-labs/avalanchego/utils/units"
+	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
 	"github.com/ava-labs/avalanchego/wallet/chain/p/builder"
 	"github.com/ava-labs/avalanchego/wallet/chain/p/wallet"
 	"github.com/ava-labs/avalanchego/wallet/subnet/primary"
@@ -81,6 +84,71 @@ func balancePKCmd() {
 	amt := new(big.Float).Quo(fbalance, eth)
 	fmt.Printf("%.9f ETH   %s\n", amt, ethAddrStr)
 	fmt.Printf("%.9f AVAX  %s\n", float64(avaBalance)/1e9, avaAddrStr)
+}
+
+func crossChainTransferCmd() {
+	args := struct {
+		Amount string `cli:"#R, amount, Amount to transfer in MilliAvax, 1000 = 1 AVAX" env:"AMOUNT"`
+		PK     string `cli:"#R, pk, Transfer from C-Chain to P-Chain address for a given private key" env:"PRIVATE_KEY"`
+		URLFlags
+	}{}
+	mcli.MustParse(&args)
+
+	avaKey, _, err := utils.ParsePrivateKey(args.PK)
+	checkErr(err)
+
+	kc := secp256k1fx.NewKeychain(avaKey)
+	ctx := context.Background()
+	exportWallet, err := primary.MakeWallet(ctx,
+		args.AvaUrl,
+		kc,
+		kc,
+		primary.WalletConfig{
+			SubnetIDs:     []ids.ID{},
+			ValidationIDs: []ids.ID{},
+		},
+	)
+	checkErr(err)
+
+	cChainID := exportWallet.C().Builder().Context().BlockchainID
+
+	owner := secp256k1fx.OutputOwners{
+		Threshold: 1,
+		Addrs: []ids.ShortID{
+			avaKey.Address(),
+		},
+	}
+
+	PlatformChainID := ids.Empty
+	argsAmount, err := strconv.ParseUint(args.Amount, 10, 64)
+	checkErr(err)
+
+	fmt.Printf("starting export... \n")
+	amount := argsAmount * units.MilliAvax
+	_, err = exportWallet.C().IssueExportTx(PlatformChainID,
+		[]*secp256k1fx.TransferOutput{{
+			Amt:          amount,
+			OutputOwners: owner,
+		}},
+	)
+	checkErr(err)
+	fmt.Printf("finished export. \n")
+
+	newWallet, err := primary.MakeWallet(ctx,
+		args.AvaUrl,
+		kc,
+		kc,
+		primary.WalletConfig{
+			SubnetIDs:     []ids.ID{},
+			ValidationIDs: []ids.ID{},
+		},
+	)
+	checkErr(err)
+
+	fmt.Printf("staring import... \n")
+	_, err = newWallet.P().IssueImportTx(cChainID, &owner)
+	checkErr(err)
+	fmt.Printf("finished import. \n")
 }
 
 func getEthBalance(ctx context.Context, url string, address ethcommon.Address) (*big.Int, error) {
