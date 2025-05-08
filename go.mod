@@ -8,6 +8,7 @@ require (
 	github.com/ava-labs/subnet-evm v0.7.1
 	github.com/btcsuite/btcd v0.24.2
 	github.com/caarlos0/env/v11 v11.3.1
+	github.com/defiweb/go-eth v0.7.0
 	github.com/ethereum/go-ethereum v1.13.14
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/jxskiss/mcli v0.9.5
@@ -18,6 +19,7 @@ require (
 require (
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/MakeNowJust/heredoc/v2 v2.0.1 // indirect
+	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
 	github.com/bits-and-blooms/bitset v1.10.0 // indirect
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.1.0 // indirect
@@ -30,6 +32,7 @@ require (
 	github.com/consensys/gnark-crypto v0.12.1 // indirect
 	github.com/crate-crypto/go-kzg-4844 v0.7.0 // indirect
 	github.com/deckarep/golang-set/v2 v2.1.0 // indirect
+	github.com/defiweb/go-rlp v0.3.0 // indirect
 	github.com/ethereum/c-kzg-4844 v0.4.0 // indirect
 	github.com/getsentry/sentry-go v0.18.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -49,6 +52,8 @@ require (
 	go.opentelemetry.io/otel/metric v1.22.0 // indirect
 	go.uber.org/mock v0.5.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
+	golang.org/x/mod v0.18.0 // indirect
+	golang.org/x/tools v0.22.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240604185151-ef581f913117 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240827150818-7e3bb234dfed // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
@@ -87,7 +92,7 @@ require (
 	github.com/prometheus/procfs v0.10.1 // indirect
 	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
 	github.com/stretchr/testify v1.9.0
-	github.com/supranational/blst v0.3.13 // indirect
+	github.com/supranational/blst v0.3.13
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect

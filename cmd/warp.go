@@ -51,6 +51,48 @@ func getWarpMsgCmd() {
 	}
 }
 
+func constructL1ValidatorRegistrationMsg(networkID uint32, validationID ids.ID, registered bool) (*warp.UnsignedMessage, error) {
+	addressedCallPayload, err := message.NewL1ValidatorRegistration(validationID, registered)
+	if err != nil {
+		return nil, err
+	}
+	addressedCall, err := payload.NewAddressedCall(
+		nil,
+		addressedCallPayload.Bytes(),
+	)
+	if err != nil {
+		return nil, err
+	}
+	unsignedMessage, err := warp.NewUnsignedMessage(
+		networkID,
+		ids.Empty,
+		addressedCall.Bytes(),
+	)
+	if err != nil {
+		return nil, err
+	}
+	return unsignedMessage, nil
+}
+
+func constructL1ValidatorRegistrationMsgCmd() {
+	args := struct {
+		Network      string `cli:"#R, -n,   --network, Network (mainnet, fuji, etc)"`
+		ValidationID string `cli:"#R, -v,   --validation, Validation ID"`
+		Registered   bool   `cli:"#R, -r,   --registered, Is validator registered"`
+	}{}
+	mcli.MustParse(&args)
+
+	networkID, err := constants.NetworkID(args.Network)
+	checkErr(err)
+	validationID, err := ids.FromString(args.ValidationID)
+	checkErr(err)
+
+	unsignedMsg, err := constructL1ValidatorRegistrationMsg(networkID, validationID, args.Registered)
+	checkErr(err)
+
+	fmt.Printf("0x%x\n", unsignedMsg.Bytes())
+}
+
 func constructUptimeMsgCmd() {
 	args := struct {
 		Network       string `cli:"#R, -n,   --network, Network (mainnet, fuji, etc)"`
@@ -97,19 +139,26 @@ func parseWarpMsgCmd() {
 		checkErr(err)
 	}
 
+	addressedCall, err := payload.ParseAddressedCall(m.Payload)
+	checkErr(err)
+
 	payloadType, payload, err := parsePayload(m.Payload)
 	checkErr(err)
 
-	fmt.Printf("\n%+v\n\nPayload (%s): %s\n", m, payloadType, payload)
+	fmt.Printf("\n%+v\n\nAddressedCall: %+v\n\nPayload (%s): %s\nPayload Hex: 0x%x\n", m, addressedCall, payloadType, payload, addressedCall.Payload)
 }
 
 func aggregateSignaturesCmd() {
 	args := struct {
-		Msg string `cli:"#R, msg, Warp Message"`
-		URL string `cli:"#R, --url, Glacier URL" default:"https://glacier-api.avax.network/v1/signatureAggregator/mainnet/aggregateSignatures"`
-		Hex bool   `cli:"--hex, Output as hex"`
+		SubnetID string `cli:"--subnet, SubnetID" default:"11111111111111111111111111111111LpoYY"`
+		Msg      string `cli:"#R, msg, Warp Message"`
+		URL      string `cli:"#R, --url, Glacier URL" default:"https://glacier-api.avax.network/v1/signatureAggregator/mainnet/aggregateSignatures"`
+		Hex      bool   `cli:"--hex, Output as hex"`
 	}{}
 	mcli.MustParse(&args)
+
+	subnetID, err := ids.FromString(args.SubnetID)
+	checkErr(err)
 
 	msg, err := parseUnsignedWarpMessage(args.Msg)
 	checkErr(err)
@@ -117,7 +166,7 @@ func aggregateSignaturesCmd() {
 	c, err := sigagg.NewClient(args.URL)
 	checkErr(err)
 
-	msgSigned, err := c.AggregateSignatures(msg, ids.ID{}, nil)
+	msgSigned, err := c.AggregateSignatures(msg, subnetID, nil)
 	checkErr(err)
 
 	if args.Hex {

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/jxskiss/mcli"
 	"github.com/multisig-labs/gogotools/pkg/utils"
 	"github.com/tidwall/sjson"
 	"github.com/tyler-smith/go-bip39"
@@ -15,9 +16,18 @@ func randomIDCmd() {
 }
 
 func randomNodeIDCmd() {
+	args := struct {
+		Hex bool `cli:"--hex"`
+	}{}
+	mcli.MustParse(&args)
+
 	nodeid, err := utils.RandomNodeID()
 	checkErr(err)
-	fmt.Println(nodeid)
+	if args.Hex {
+		fmt.Printf("0x%x\n", nodeid.Bytes())
+	} else {
+		fmt.Println(nodeid)
+	}
 }
 
 func randomBLSCmd() {
