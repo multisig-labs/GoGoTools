@@ -3,7 +3,6 @@ package sigagg
 import (
 	"testing"
 
-	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/vms/platformvm/warp"
 	"github.com/multisig-labs/gogotools/pkg/utils"
 	"github.com/stretchr/testify/require"
@@ -17,8 +16,7 @@ func TestClient(t *testing.T) {
 	msg, err := warp.ParseUnsignedMessage(data)
 	require.NoError(t, err)
 
-	subnetID := ids.ID{}
-	msgSigned, err := c.AggregateSignatures(msg, subnetID, nil)
+	msgSigned, err := c.AggregateSignatures(msg, nil, nil)
 	require.NoError(t, err)
 	require.NotNil(t, msgSigned)
 }

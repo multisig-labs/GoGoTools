@@ -21,7 +21,7 @@ var (
 )
 
 type Client interface {
-	AggregateSignatures(msg *warp.UnsignedMessage, subnetID ids.ID, justification []byte) (*warp.Message, error)
+	AggregateSignatures(msg *warp.UnsignedMessage, subnetID *ids.ID, justification []byte) (*warp.Message, error)
 }
 
 type client struct {
@@ -40,10 +40,12 @@ func NewClient(url string, headers ...map[string]string) (Client, error) {
 }
 
 // Use the Glacier API to aggregate signatures
-func (c *client) AggregateSignatures(msg *warp.UnsignedMessage, subnetID ids.ID, justification []byte) (*warp.Message, error) {
+func (c *client) AggregateSignatures(msg *warp.UnsignedMessage, subnetID *ids.ID, justification []byte) (*warp.Message, error) {
 	params := map[string]interface{}{
-		"message":         utils.BytesToHex(msg.Bytes()),
-		"signingSubnetId": subnetID.String(),
+		"message": utils.BytesToHex(msg.Bytes()),
+	}
+	if subnetID != nil {
+		params["signingSubnetId"] = subnetID.String()
 	}
 	if justification != nil {
 		params["justification"] = utils.BytesToHex(justification)

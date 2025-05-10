@@ -93,6 +93,52 @@ func constructL1ValidatorRegistrationMsgCmd() {
 	fmt.Printf("0x%x\n", unsignedMsg.Bytes())
 }
 
+func constructL1WeightMsgCmd() {
+	args := struct {
+		Network      string `cli:"#R, -n,   --network, Network (mainnet, fuji, etc)"`
+		ValidationID string `cli:"#R, -v,   --validation, Validation ID"`
+		Weight       uint64 `cli:"#R, -r,   --weight"`
+		Nonce        uint64 `cli:"#R, --nonce"`
+		BlockchainID string `cli:"--blockchain, Source Blockchain ID" default:"11111111111111111111111111111111LpoYY"`
+		Address      string `cli:"--address, Address for AddressedCall"`
+	}{}
+	mcli.MustParse(&args)
+
+	networkID, err := constants.NetworkID(args.Network)
+	checkErr(err)
+	validationID, err := ids.FromString(args.ValidationID)
+	checkErr(err)
+	blockchainID, err := ids.FromString(args.BlockchainID)
+	checkErr(err)
+
+	addressedCallPayload, err := message.NewL1ValidatorWeight(
+		validationID,
+		args.Nonce,
+		args.Weight,
+	)
+	checkErr(err)
+
+	var addr []byte
+	if args.Address != "" {
+		addr = utils.HexToBytes(args.Address)
+	} else {
+		addr = nil
+	}
+	addressedCall, err := payload.NewAddressedCall(
+		addr,
+		addressedCallPayload.Bytes(),
+	)
+	checkErr(err)
+	unsignedMessage, err := warp.NewUnsignedMessage(
+		networkID,
+		blockchainID,
+		addressedCall.Bytes(),
+	)
+	checkErr(err)
+
+	fmt.Printf("0x%x\n", unsignedMessage.Bytes())
+}
+
 func constructUptimeMsgCmd() {
 	args := struct {
 		Network       string `cli:"#R, -n,   --network, Network (mainnet, fuji, etc)"`
@@ -150,15 +196,20 @@ func parseWarpMsgCmd() {
 
 func aggregateSignaturesCmd() {
 	args := struct {
-		SubnetID string `cli:"--subnet, SubnetID" default:"11111111111111111111111111111111LpoYY"`
+		SubnetID string `cli:"--subnet, SubnetID" default:"NOTSUPPLIED"`
 		Msg      string `cli:"#R, msg, Warp Message"`
 		URL      string `cli:"#R, --url, Glacier URL" default:"https://glacier-api.avax.network/v1/signatureAggregator/mainnet/aggregateSignatures"`
 		Hex      bool   `cli:"--hex, Output as hex"`
 	}{}
 	mcli.MustParse(&args)
 
-	subnetID, err := ids.FromString(args.SubnetID)
-	checkErr(err)
+	var subnetIDPtr *ids.ID
+	var err error
+	if args.SubnetID != "NOTSUPPLIED" {
+		subnetID, err := ids.FromString(args.SubnetID)
+		checkErr(err)
+		subnetIDPtr = &subnetID
+	}
 
 	msg, err := parseUnsignedWarpMessage(args.Msg)
 	checkErr(err)
@@ -166,7 +217,7 @@ func aggregateSignaturesCmd() {
 	c, err := sigagg.NewClient(args.URL)
 	checkErr(err)
 
-	msgSigned, err := c.AggregateSignatures(msg, subnetID, nil)
+	msgSigned, err := c.AggregateSignatures(msg, subnetIDPtr, nil)
 	checkErr(err)
 
 	if args.Hex {

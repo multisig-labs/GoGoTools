@@ -43,6 +43,7 @@ func main() {
 	mcli.Add("warp-parse", parseWarpMsgCmd, "Parse a warp message")
 	mcli.Add("warp-construct-uptime", constructUptimeMsgCmd, "Construct an unsgined uptime message")
 	mcli.Add("warp-construct-l1-validator-registration", constructL1ValidatorRegistrationMsgCmd, "Construct an unsigned L1ValidatorRegistration msg")
+	mcli.Add("warp-construct-l1-weight", constructL1WeightMsgCmd, "Construct an unsigned msg to change weight on P-Chain")
 	mcli.Add("warp-aggregate-signatures", aggregateSignaturesCmd, "Aggregate signatures for a warp message")
 	mcli.Add("version", versionCmd, "Version")
 	mcli.AddHelp()
