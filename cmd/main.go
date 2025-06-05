@@ -9,8 +9,8 @@ import (
 )
 
 type URLFlags struct {
-	AvaUrl string `cli:"--ava-url, URL of the Avalanche node (do not include a path)." env:"AVA_RPC_URL" default:"https://api.avax.network"`
-	EthUrl string `cli:"--eth-url, URL of the Ethereum endpoint (full path to evm rpc)" env:"ETH_RPC_URL" default:"https://api.avax.network/ext/bc/C/rpc"`
+	AvaUrl string `cli:"--ava-url, URL of the Avalanche node (do not include a path)." env:"AVA_RPC_URL,PCHAIN_RPC_URL,NODE_URL" default:"https://api.avax.network"`
+	EthUrl string `cli:"--eth-url, URL of the Ethereum endpoint (full path to evm rpc)" env:"ETH_RPC_URL,EVM_RPC_URL" default:"https://api.avax.network/ext/bc/C/rpc"`
 }
 
 func main() {

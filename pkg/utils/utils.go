@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -166,7 +168,9 @@ func FetchRPC(url string, method string, params string) (string, error) {
 	}`, time.Now().Unix(), method, params)
 
 	resp, err = client.R().
+		SetDebug(IsDebug()).
 		EnableTrace().
+		EnableGenerateCurlOnDebug().
 		SetHeader("Content-Type", "application/json").
 		SetHeader("Accept", "application/json").
 		SetBody(body).
@@ -176,6 +180,14 @@ func FetchRPC(url string, method string, params string) (string, error) {
 		return "", fmt.Errorf("fetch error %d: %s %s", resp.StatusCode(), url, body)
 	}
 	return resp.String(), err
+}
+
+func IsDebug() bool {
+	debug, err := strconv.ParseBool(os.Getenv("DEBUG"))
+	if err != nil {
+		return false
+	}
+	return debug
 }
 
 // DecodeError decodes an error from an ABI string and an error.

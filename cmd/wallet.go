@@ -62,7 +62,7 @@ func balanceAddressCmd() {
 
 func balancePKCmd() {
 	args := struct {
-		PK string `cli:"#R, pk, Show P-Chain and C-Chain balances for a private key" env:"PRIVATE_KEY"`
+		PK string `cli:"#R, pk, Show P-Chain and ETH balances for a private key" env:"PRIVATE_KEY"`
 		URLFlags
 	}{}
 	mcli.MustParse(&args)

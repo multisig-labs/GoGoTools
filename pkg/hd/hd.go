@@ -3,6 +3,7 @@ package hd
 import (
 	"crypto/ecdsa"
 	"fmt"
+	"math/big"
 
 	avacrypto "github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
@@ -79,6 +80,49 @@ func DeriveHDKeys(mnemonic string, path accounts.DerivationPath, numKeys int) ([
 	return hdkeys, nil
 }
 
+func XPubKey(mnemonic string, path accounts.DerivationPath) (*hdkeychain.ExtendedKey, error) {
+	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
+	if err != nil {
+		return nil, err
+	}
+	masterKey, err := hdkeychain.NewMaster(seed, &chaincfg.MainNetParams)
+	if err != nil {
+		return nil, err
+	}
+
+	masterPubKey, err := masterKey.Neuter()
+	if err != nil {
+		return nil, err
+	}
+
+	return masterPubKey, nil
+}
+
+func DerivePubKeys(xpub *hdkeychain.ExtendedKey, path accounts.DerivationPath, numKeys int) ([]HDKey, error) {
+	hdkeys := []HDKey{}
+	var derive = func(limit int, next func() accounts.DerivationPath) {
+		for i := 0; i < limit; i++ {
+			path := next()
+			if pk, err := derivePublicKey(xpub, path); err != nil {
+				fmt.Println("Account derivation failed", "error", err)
+			} else {
+				fmt.Println("PubKey", "path", path, "pk", ethcrypto.PubkeyToAddress(*pk).String())
+				hdk := HDKey{
+					PK: &ecdsa.PrivateKey{
+						PublicKey: *pk,
+						D:         big.NewInt(0),
+					},
+					Path: path.String(),
+				}
+				hdkeys = append(hdkeys, hdk)
+			}
+		}
+	}
+
+	derive(numKeys, accounts.DefaultIterator(path))
+	return hdkeys, nil
+}
+
 func derivePrivateKey(masterKey *hdkeychain.ExtendedKey, path accounts.DerivationPath) (*ecdsa.PrivateKey, error) {
 	var err error
 	key := masterKey
@@ -92,4 +136,28 @@ func derivePrivateKey(masterKey *hdkeychain.ExtendedKey, path accounts.Derivatio
 	privateKey, _ := key.ECPrivKey()
 	privateKeyECDSA := privateKey.ToECDSA()
 	return privateKeyECDSA, nil
+}
+
+func derivePublicKey(masterKey *hdkeychain.ExtendedKey, path accounts.DerivationPath) (*ecdsa.PublicKey, error) {
+	var err error
+	key := masterKey
+	fmt.Println("Begin deriving", "path", path)
+	for _, n := range path {
+		fmt.Println("Deriving", "path", path, "n", n)
+
+		tmpKey, err := key.Derive(n)
+		if err != nil {
+			fmt.Println("Derive failed", "error", err)
+		} else {
+			key = tmpKey
+		}
+	}
+	if key == nil {
+		return nil, fmt.Errorf("key is nil")
+	}
+	pubkey, err := key.ECPubKey()
+	if err != nil {
+		return nil, err
+	}
+	return pubkey.ToECDSA(), nil
 }
