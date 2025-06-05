@@ -8,6 +8,7 @@ Usage:
   ggt <command> ...
 
 Commands:
+Commands:
   balance                      Get the balance of an address
   balance-pk                   Get the balance of an address for a private key
   bech32-decode                Decode a bech32 address
@@ -15,6 +16,7 @@ Commands:
   cb58-decode-sig              Decode a signature (r,s,v) from CB58
   cb58-encode                  Encode a value to CB58
   completion                   Generate shell completion scripts
+  cross-chain-tx               Transfer assets from C-Chain to P-Chain
   help                         Help about any command
   inspect-tx-p                 Inspect a P-Chain transaction
   l1-validators                Get current validators from a L1 validator RPC endpoint
@@ -27,15 +29,20 @@ Commands:
   random-bls                   Generate a random BLS key
   random-id                    Generate a random ID
   random-nodeid                Generate a random node ID
+  revert-reason                Find revert reason for a failed tx hash
   rpc                          Ergonomic access to avalanche node RPC APIs
   verify-bls                   Verify a BLS Proof of Possession
   version                      Version
   vmid                         Given a vmName, try to encode the ASCII name as a vmID
   vmname                       Given a vmID, try to decode the ASCII name
   warp-aggregate-signatures    Aggregate signatures for a warp message
-  warp-construct-uptime        Construct an uptime message
+  warp-construct-l1-validator-registration Construct an unsigned L1ValidatorRegistration msg
+  warp-construct-l1-weight     Construct an unsigned msg to change weight on P-Chain
+  warp-construct-uptime        Construct an unsgined uptime message
   warp-get                     Get a warp message from a transaction ID
   warp-parse                   Parse a warp message
+  xpub                         Show xpub for a BIP39 mnemonic and derivation path
+  xpub-addrs                   Show addresses for an xpub key and derivation path
 </code></pre>
 
 ## Mnemonics
@@ -92,6 +99,47 @@ Ava addr:      P-avax1yljhuvjkmtu0y5ls6kf4exsdd8gea9mp8jd32r
 Ava addr:      P-fuji1yljhuvjkmtu0y5ls6kf4exsdd8gea9mptqfwxu
 Ava addr:      P-local1yljhuvjkmtu0y5ls6kf4exsdd8gea9mp7pshft
 
+```
+
+## xpub
+
+In Bitcoin, there is a concept of an `xpub` key (Extended Public Key), which allows you to derive all public keys (NOT private keys) from an HD mnemonic. GoGoTools lets you do this for evm and P-Chain addresses. Useful for services that need to monitor many addresses for activity, or gas funds, etc.
+
+```sh
+# Generate an xpub for a mnemonic
+❯ ggt xpub "test test test test test test test test test test test junk"
+xpub6Ce9NcJvTk36xtLSrJLZqE7wtgA5deCeYs7rSQtreh4cj6ByPtrg9sD7V2FNFLPnf8heNP3FGkeV9qwfzvZNSd54JoNXVsXFYSYwHsnJxqP
+
+# Use the xpub to derive addresses
+❯ ggt xpub-addrs xpub6Ce9NcJvTk36xtLSrJLZqE7wtgA5deCeYs7rSQtreh4cj6ByPtrg9sD7V2FNFLPnf8heNP3FGkeV9qwfzvZNSd54JoNXVsXFYSYwHsnJxqP --json | jq
+{
+  "xpub": "xpub6Ce9NcJvTk36xtLSrJLZqE7wtgA5deCeYs7rSQtreh4cj6ByPtrg9sD7V2FNFLPnf8heNP3FGkeV9qwfzvZNSd54JoNXVsXFYSYwHsnJxqP",
+  "path": "m/44'/60'/0'/0/*",
+  "evm_addrs": [
+    "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+    "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+    "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+    "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+    "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+    "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc",
+    "0x976EA74026E726554dB657fA54763abd0C3a0aa9",
+    "0x14dC79964da2C08b23698B3D3cc7Ca32193d9955",
+    "0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f",
+    "0xa0Ee7A142d267C1f36714E4a8F75612F20a79720"
+  ],
+  "ava_addrs": [
+    "P-avax15428vq2uzwhm3taey9sr9x5vm6tk78ewvkckhy",
+    "P-avax1cjzphr67dug28rw9ueewrqllmxlqe5f09qqqnc",
+    "P-avax1sj3m3zudqkw4plsvm7p08h9q89lsy4wp9c809f",
+    "P-avax1y3fgntsaf2cmylsnu3880g7wp6aj73zun9t5wa",
+    "P-avax1jft4f7x5cajyw6w8vfj9708mx9jfswq0ydvr0f",
+    "P-avax1syp9y2mlfrrjwdaj5ytezh9wuerwuhnctaelxn",
+    "P-avax1zyf8ga3p89xmjaxje2ckvtvhjzv7g24sgu0uqg",
+    "P-avax1mer4xr0wqlq7v8m678vvx4zeyep20v8rwarugf",
+    "P-avax1l5rrv44ufqq97psu2jqx909mdnjapwv0fwudyx",
+    "P-avax14flvw0x8fstzly79tacgsulxvkpv858quqds6w"
+  ]
+}
 ```
 
 ## Warp
