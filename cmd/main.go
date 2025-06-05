@@ -28,6 +28,8 @@ func main() {
 	mcli.Add("rpc", rpcCmd, "Ergonomic access to avalanche node RPC APIs")
 	mcli.Add("l1-validators", l1ValidatorsCmd, "Get current validators from a L1 validator RPC endpoint")
 	mcli.Add("mnemonic-addrs", mnemonicAddrsCmd, "Show addresses for a BIP39 mnemonic")
+	mcli.Add("xpub-addrs", xpubAddrsCmd, "Show addresses for an xpub key and derivation path")
+	mcli.Add("xpub", xpubkeyCmd, "Show xpub for a BIP39 mnemonic and derivation path")
 	mcli.Add("mnemonic-keys", mnemonicKeysCmd, "Show keys and addresses for a BIP39 mnemonic")
 	mcli.Add("mnemonic-generate", randomMnemonicCmd, "Generate a random BIP39 mnemonic")
 	mcli.Add("mnemonic-insecure", mnemonicInsecureCmd, "Generate an INSECURE test BIP39 mnemonic")

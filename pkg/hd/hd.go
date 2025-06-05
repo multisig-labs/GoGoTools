@@ -3,7 +3,6 @@ package hd
 import (
 	"crypto/ecdsa"
 	"fmt"
-	"math/big"
 
 	avacrypto "github.com/ava-labs/avalanchego/utils/crypto/secp256k1"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
@@ -45,6 +44,28 @@ func (h HDKey) AvaPrivKey() string {
 	return avapk.String()
 }
 
+type HDPubKey struct {
+	PubKey *ecdsa.PublicKey
+	Path   string
+}
+
+func (h HDPubKey) EthAddr() string {
+	return ethcrypto.PubkeyToAddress(*h.PubKey).String()
+}
+
+func (h HDPubKey) AvaAddr(chain string, hrp string) string {
+	pkbytes := ethcrypto.CompressPubkey(h.PubKey)
+	avapk, err := avacrypto.ToPublicKey(pkbytes)
+	if err != nil {
+		panic(err)
+	}
+	addr, err := address.Format(chain, hrp, avapk.Address().Bytes())
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
 func DeriveHDKeys(mnemonic string, path accounts.DerivationPath, numKeys int) ([]HDKey, error) {
 	// Generate seed from the mnemonic
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
@@ -64,7 +85,7 @@ func DeriveHDKeys(mnemonic string, path accounts.DerivationPath, numKeys int) ([
 		for i := 0; i < limit; i++ {
 			path := next()
 			if pk, err := derivePrivateKey(masterKey, path); err != nil {
-				fmt.Println("Account derivation failed", "error", err)
+				return // Skip failed derivations silently
 			} else {
 				hdk := HDKey{
 					PK:   pk,
@@ -80,6 +101,7 @@ func DeriveHDKeys(mnemonic string, path accounts.DerivationPath, numKeys int) ([
 	return hdkeys, nil
 }
 
+// Get the Extended Public Key (xpubkey) for the given mnemonic and derivation path
 func XPubKey(mnemonic string, path accounts.DerivationPath) (*hdkeychain.ExtendedKey, error) {
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, "")
 	if err != nil {
@@ -90,36 +112,57 @@ func XPubKey(mnemonic string, path accounts.DerivationPath) (*hdkeychain.Extende
 		return nil, err
 	}
 
-	masterPubKey, err := masterKey.Neuter()
+	// Derive to the account level using private key (for hardened derivations)
+	// For Ethereum: m/44'/60'/0'
+	accountKey := masterKey
+	for i := range 3 { // First 3 components are hardened
+		accountKey, err = accountKey.Derive(path[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Convert to public key at account level
+	accountPubKey, err := accountKey.Neuter()
 	if err != nil {
 		return nil, err
 	}
 
-	return masterPubKey, nil
+	return accountPubKey, nil
 }
 
-func DerivePubKeys(xpub *hdkeychain.ExtendedKey, path accounts.DerivationPath, numKeys int) ([]HDKey, error) {
-	hdkeys := []HDKey{}
+func DerivePubKeys(xpub *hdkeychain.ExtendedKey, path accounts.DerivationPath, numKeys int) ([]HDPubKey, error) {
+	hdkeys := []HDPubKey{}
+
+	// Only derive the non-hardened part of the path (last 2 components for standard paths)
+	// For Ethereum: 0/0, 0/1, 0/2, etc.
+	nonHardenedPath := path[3:] // Skip the first 3 hardened components
+
 	var derive = func(limit int, next func() accounts.DerivationPath) {
-		for i := 0; i < limit; i++ {
-			path := next()
-			if pk, err := derivePublicKey(xpub, path); err != nil {
-				fmt.Println("Account derivation failed", "error", err)
+		for i := range limit {
+			// Create path for this index: 0/i
+			currentPath := make(accounts.DerivationPath, len(nonHardenedPath))
+			copy(currentPath, nonHardenedPath)
+			currentPath[len(currentPath)-1] = uint32(i) // Set the address index
+
+			if pk, err := derivePublicKey(xpub, currentPath); err != nil {
+				return // Skip failed derivations silently
 			} else {
-				fmt.Println("PubKey", "path", path, "pk", ethcrypto.PubkeyToAddress(*pk).String())
-				hdk := HDKey{
-					PK: &ecdsa.PrivateKey{
-						PublicKey: *pk,
-						D:         big.NewInt(0),
-					},
-					Path: path.String(),
+				// Reconstruct full path for display
+				fullPath := make(accounts.DerivationPath, len(path))
+				copy(fullPath, path)
+				fullPath[len(fullPath)-1] = uint32(i)
+
+				hdk := HDPubKey{
+					PubKey: pk,
+					Path:   fullPath.String(),
 				}
 				hdkeys = append(hdkeys, hdk)
 			}
 		}
 	}
 
-	derive(numKeys, accounts.DefaultIterator(path))
+	derive(numKeys, func() accounts.DerivationPath { return nonHardenedPath })
 	return hdkeys, nil
 }
 
@@ -141,20 +184,13 @@ func derivePrivateKey(masterKey *hdkeychain.ExtendedKey, path accounts.Derivatio
 func derivePublicKey(masterKey *hdkeychain.ExtendedKey, path accounts.DerivationPath) (*ecdsa.PublicKey, error) {
 	var err error
 	key := masterKey
-	fmt.Println("Begin deriving", "path", path)
 	for _, n := range path {
-		fmt.Println("Deriving", "path", path, "n", n)
-
-		tmpKey, err := key.Derive(n)
+		key, err = key.Derive(n)
 		if err != nil {
-			fmt.Println("Derive failed", "error", err)
-		} else {
-			key = tmpKey
+			return nil, fmt.Errorf("failed to derive key at index %d: %w", n, err)
 		}
 	}
-	if key == nil {
-		return nil, fmt.Errorf("key is nil")
-	}
+
 	pubkey, err := key.ECPubKey()
 	if err != nil {
 		return nil, err
