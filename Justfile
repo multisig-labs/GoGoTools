@@ -22,3 +22,10 @@ build:
 install: build
   mv bin/ggt $GOPATH/bin/ggt
 
+# Run an RPC cache proxy (EVM only)
+rpc-cache-proxy rpc_url="https://api.avax.network/ext/bc/C/rpc":
+	docker run --name rpc-cache-proxy -p 3000:3000 \
+		-e UPSTREAM_RPC_URL={{rpc_url}} \
+		-e REDIS_URL=memory \
+		ghcr.io/powerloom/ethereum-rpc-cache-proxy:latest
+		

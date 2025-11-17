@@ -17,8 +17,8 @@ import (
 	"github.com/ava-labs/avalanchego/wallet/chain/p/wallet"
 	"github.com/ava-labs/avalanchego/wallet/subnet/primary"
 	"github.com/ava-labs/avalanchego/wallet/subnet/primary/common"
+	ethcommon "github.com/ava-labs/libevm/common"
 	"github.com/ava-labs/subnet-evm/ethclient"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/multisig-labs/gogotools/pkg/utils"
 
 	"github.com/jxskiss/mcli"
@@ -172,7 +172,7 @@ func getPBalance(ctx context.Context, url string, address ids.ShortID) (uint64, 
 	}
 
 	pUTXOs := common.NewChainUTXOs(constants.PlatformChainID, state.UTXOs)
-	pBackend := wallet.NewBackend(state.PCTX, pUTXOs, nil)
+	pBackend := wallet.NewBackend(pUTXOs, nil)
 	pBuilder := builder.New(addresses, state.PCTX, pBackend)
 
 	currentBalances, err := pBuilder.GetBalance()

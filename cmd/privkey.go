@@ -6,7 +6,7 @@ import (
 
 	"github.com/ava-labs/avalanchego/utils/cb58"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
-	ethcrypto "github.com/ethereum/go-ethereum/crypto"
+	ethcrypto "github.com/ava-labs/libevm/crypto"
 	"github.com/jxskiss/mcli"
 	"github.com/multisig-labs/gogotools/pkg/utils"
 )

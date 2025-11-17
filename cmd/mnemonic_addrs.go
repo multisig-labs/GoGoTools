@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ava-labs/libevm/accounts"
 	"github.com/btcsuite/btcd/btcutil/hdkeychain"
-	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/jxskiss/mcli"
 	"github.com/multisig-labs/gogotools/pkg/hd"
 

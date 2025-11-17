@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/ava-labs/avalanchego/utils/cb58"
-	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/ava-labs/libevm/common/hexutil"
 	"github.com/jxskiss/mcli"
 )
 

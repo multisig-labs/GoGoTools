@@ -18,8 +18,9 @@ import (
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ava-labs/avalanchego/vms/platformvm/warp/message"
 	"github.com/ava-labs/coreth/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ava-labs/libevm/common"
+	"github.com/ava-labs/libevm/crypto"
+	decred "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/go-resty/resty/v2"
 	"github.com/tidwall/gjson"
 )
@@ -72,6 +73,18 @@ func HexOrCB58ToID(s string) (ids.ID, error) {
 		return ids.ToID(bytes)
 	}
 	return ids.FromString(s)
+}
+
+// Given public key hex string, parse into ava secp256k1.PublicKey
+// Using Decred to support both uncompressed and compressed
+func ParsePublicKey(pubkeyStr string) (*secp256k1.PublicKey, error) {
+	pubBytes := HexToBytes(pubkeyStr)
+	decredPubkey, err := decred.ParsePubKey(pubBytes)
+	if err != nil {
+		return nil, err
+	}
+	compressedBytes := decredPubkey.SerializeCompressed()
+	return secp256k1.ToPublicKey(compressedBytes)
 }
 
 // Support PrivateKey-(cb58) or hex string with optional 0x prefix

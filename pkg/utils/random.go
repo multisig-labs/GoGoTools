@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 
 	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto/bls"
+	"github.com/ava-labs/avalanchego/utils/crypto/bls/signer/localsigner"
 	"github.com/ava-labs/avalanchego/vms/platformvm/signer"
 )
 
@@ -30,13 +30,16 @@ func RandomNodeID() (ids.NodeID, error) {
 	return nodeid, nil
 }
 
-func RandomBLS() (*bls.LocalSigner, *signer.ProofOfPossession, error) {
+func RandomBLS() (*localsigner.LocalSigner, *signer.ProofOfPossession, error) {
 	pop := &signer.ProofOfPossession{}
-	sk, err := bls.NewSigner()
+	sk, err := localsigner.New()
 	if err != nil {
 		return nil, nil, err
 	}
-	pop = signer.NewProofOfPossession(sk)
+	pop, err = signer.NewProofOfPossession(sk)
+	if err != nil {
+		return nil, nil, err
+	}
 	err = pop.Verify()
 	if err != nil {
 		return nil, nil, err
